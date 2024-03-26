@@ -1,2 +1,3 @@
-/Server/node_modules/
-/make-ui/node_modules/
+/client/node_modules
+/node_modules
+/img-sample

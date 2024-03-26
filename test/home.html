@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서당</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/home.css">
+</head>
+
+<body>
+    <div class="root">
+        <div class="header">
+            <div class="topbar-header">
+                <div>과목 선택</div>
+            </div>
+            <div class="topbar-container">
+                <div class="topbar-logo"></div>
+            </div>
+            <div class="topbar-footer">
+                <div class="tool page-not-selected">
+                    <img class="nav-icon" src="./img/search.png" />
+                </div>
+                <div class="tool page-not-selected">
+                    <img class="nav-icon" src="./img/alert.png" />
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="subjectWrap">
+                <script>
+                    const category = ["국어", "영어", "수학", "과학", "사회", "기타"]
+                    const files = ["korean", "english", "math", "science", "society", "etc"]
+                    for (var i in category) {
+                        document.write(`
+                        <div class="subject">
+                            <a href="/search/?category=korea">
+                                <div class="subject-content">
+                                    <div class="subject-imgWrap">
+                                        <img src="./img/icon/${files[i]}.png">
+                                    </div>
+                                    <div class="subject-title">${category[i]}</div>
+                                </div>
+                            </a>
+                        </div>
+                        `)
+                    }
+                </script>
+
+            </div>
+        </div>
+        <div class="footer">
+            <div class="nav-item page-selected">
+                <a>
+                    <img class="nav-icon" src="./img/home2.png" />
+                </a>
+            </div>
+            <div class="nav-item page-not-selected">
+                <a>
+                    <img class="nav-icon" src="./img/write.png" />
+                </a>
+            </div>
+            <div class="nav-item page-not-selected">
+                <a>
+                    <img class="nav-icon" src="./img/user.png" />
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

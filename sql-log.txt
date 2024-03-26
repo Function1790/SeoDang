@@ -1,0 +1,21 @@
+create table user(
+    num int not null auto_increment, 
+    uid text not null, 
+    upw text not null, 
+    name text not null,
+    schoolid int not null, 
+    nickname text not null, 
+    primary key(num)
+);
+
+create table item(
+    num int not null auto_increment, 
+    title text not null, 
+    content text not null, 
+    category text not null,
+    place text not null,
+    post_time datetime not null,
+    isSelled tinyint,
+    seller text not null,
+    primary key(num)
+);

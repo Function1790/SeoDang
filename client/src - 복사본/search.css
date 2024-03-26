@@ -1,0 +1,37 @@
+.item {
+    border-bottom: 1px solid lightgrey;
+    height: 120px;
+    display: flex;
+    flex-direction: row;
+}
+
+.item-header {
+    width: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.item-container {
+    margin-left: 20px;
+    flex: 1;
+    display: flex;
+    align-items: left;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.item-imgWrap {
+    width: 90px;
+    height: 90px;
+    background-color: rgb(94, 226, 193);
+    border-radius: 5px;
+}
+
+.item-title {
+    font-weight: 700;
+}
+
+.item-description {
+    color: #696969;
+}

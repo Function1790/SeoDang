@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서당</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/write.css">
+</head>
+
+<body>
+    <div class="root">
+        <div class="header">
+            <div class="topbar-header">
+                <div>글쓰기</div>
+            </div>
+            <div class="topbar-container">
+                <div class="topbar-logo"></div>
+            </div>
+            <div class="topbar-footer">
+                <div class="tool page-not-selected">
+                    <img class="nav-icon" src="./img/search.png" />
+                </div>
+                <div class="tool page-not-selected">
+                    <img class="nav-icon" src="./img/alert.png" />
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="inputWrap">
+                <div class="inputLabel">제목</div>
+                <input class="input" type="text" name="title" placeholder="제목">
+            </div>
+            <div class="inputWrap">
+                <div class="inputLabel">설명</div>
+                <textarea class="input input-long" type="text" name="content"></textarea>
+            </div>
+            <div class="inputWrap">
+                <div class="inputLabel">과목</div>
+                <div class="input selectwrap">
+                    <select name="fruits" class="select">
+                        <option disabled selected>과목 선택</option>
+                        <option value="korean">국어</option>
+                        <option value="english">영어</option>
+                        <option value="math">수학</option>
+                        <option value="science">과학</option>
+                        <option value="society">사회</option>
+                        <option value="etc">기타</option>
+                    </select>
+                </div>
+            </div>
+            <div class="inputWrap">
+                <div class="inputLabel">가격</div>
+                <input class="input" type="number" name="price" placeholder="가격" min='0' step='1'>
+            </div>
+            <div class="inputWrap">
+                <div class="inputLabel">사진</div>
+                <div class="imgSelectWrap">
+                    <label for="chooseFile">
+                        <div class="imgSelectBtn"></div>
+                    </label>
+                </div>
+                <input type="file" id="chooseFile" name="chooseFile" accept="image/*" onchange="loadFile(this)">
+            </div>
+        </div>
+        <div class="footer">
+            <div class="nav-item page-selected">
+                <a>
+                    <img class="nav-icon" src="./img/home2.png" />
+                </a>
+            </div>
+            <div class="nav-item page-not-selected">
+                <a>
+                    <img class="nav-icon" src="./img/write.png" />
+                </a>
+            </div>
+            <div class="nav-item page-not-selected">
+                <a>
+                    <img class="nav-icon" src="./img/user.png" />
+                </a>
+            </div>
+        </div>
+    </div>
+    <script src="./src/write.js"></script>
+</body>
+
+</html>
