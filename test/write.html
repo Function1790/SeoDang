@@ -13,6 +13,11 @@
     <div class="root">
         <div class="header">
             <div class="topbar-header">
+                <div class="gobackBtn">
+                    <a href="/home">
+                        <img src="./img/arrow.png" class="arrowBtn" alt="">
+                    </a>
+                </div>
                 <div>글쓰기</div>
             </div>
             <div class="topbar-container">
@@ -30,16 +35,16 @@
         <div class="container">
             <div class="inputWrap">
                 <div class="inputLabel">제목</div>
-                <input class="input" type="text" name="title" placeholder="제목">
+                <input class="input" id="title" type="text" name="title" placeholder="제목">
             </div>
             <div class="inputWrap">
                 <div class="inputLabel">설명</div>
-                <textarea class="input input-long" type="text" name="content"></textarea>
+                <textarea class="input input-long" id="content" type="text" name="content"></textarea>
             </div>
             <div class="inputWrap">
                 <div class="inputLabel">과목</div>
                 <div class="input selectwrap">
-                    <select name="fruits" class="select">
+                    <select name="fruits" id="select" class="select">
                         <option disabled selected>과목 선택</option>
                         <option value="korean">국어</option>
                         <option value="english">영어</option>
@@ -62,11 +67,11 @@
                         <img src="" id="itemImg">
                     </div>
                 </div>
-                <input type="file" id="chooseFile" name="chooseFile" accept="image/*" onchange="loadFile(this)">
+                <input type="file" id="chooseFile" name="chooseFile" accept="image/*">
             </div>
             <div class="inputWrap">
                 <div class="inputLabel">가격</div>
-                <input class="input" type="number" name="price" placeholder="가격" min='0' step='1'>
+                <input class="input" id="price" type="number" name="price" placeholder="가격" min='0' step='1'>
             </div>
             <div class="confirmWrap center">
                 <div class="confirmBtn center">게시하기</div>

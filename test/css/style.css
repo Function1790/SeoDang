@@ -38,6 +38,7 @@ body {
     display: flex;
     flex-direction: row;
     border-bottom: 1px solid rgb(220, 220, 220);
+    z-index: 50;
 }
 
 
@@ -58,6 +59,7 @@ body {
     position: fixed;
     padding: 0 40px;
     justify-content: space-between;
+    z-index: 50;
 }
 
 .header>* {
@@ -116,4 +118,43 @@ body {
 
 .tool{
     margin-right: 20px;
+}
+
+.cbutton {
+    border: 3px solid #ffba6c;
+    background-color: #ffba6c;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+    width: 100px;
+    height: 50px;
+    transition: 0.2s;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cbutton:hover {
+    border: 3px solid #ffba6c;
+    background-color: #ffffff;
+    color: #ffba6c;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+input {
+    outline: none;
+}
+
+.gobackBtn {
+    width: 25px;
+    height: 25px;
+    margin-top: 2px;
+    margin-right: 2px;
+}
+
+.arrowBtn {
+    width: 100%;
+    height: 100%;
 }
