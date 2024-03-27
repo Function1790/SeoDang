@@ -33,49 +33,51 @@
             </div>
         </div>
         <div class="container">
-            <div class="inputWrap">
-                <div class="inputLabel">제목</div>
-                <input class="input" id="title" type="text" name="title" placeholder="제목">
-            </div>
-            <div class="inputWrap">
-                <div class="inputLabel">설명</div>
-                <textarea class="input input-long" id="content" type="text" name="content"></textarea>
-            </div>
-            <div class="inputWrap">
-                <div class="inputLabel">과목</div>
-                <div class="input selectwrap">
-                    <select name="fruits" id="select" class="select">
-                        <option disabled selected>과목 선택</option>
-                        <option value="korean">국어</option>
-                        <option value="english">영어</option>
-                        <option value="math">수학</option>
-                        <option value="science">과학</option>
-                        <option value="society">사회</option>
-                        <option value="etc">기타</option>
-                    </select>
+            <form action="/write-check" method="post" enctype="multipart/form-data">
+                <div class="inputWrap">
+                    <div class="inputLabel">제목</div>
+                    <input class="input" id="title" type="text" name="title" placeholder="제목">
                 </div>
-            </div>
-            <div class="inputWrap imgInputWrap">
-                <div class="inputLabel">사진</div>
-                <div class="imgSelectWrap">
-                    <label for="chooseFile">
-                        <div class="imgSelectBtn center">
-                            <img src="/img/camera.png">
-                        </div>
-                    </label>
-                    <div class="imgSelected center">
-                        <img src="" id="itemImg">
+                <div class="inputWrap">
+                    <div class="inputLabel">설명</div>
+                    <textarea class="input input-long" id="content" type="text" name="content"></textarea>
+                </div>
+                <div class="inputWrap">
+                    <div class="inputLabel">과목</div>
+                    <div class="input selectwrap">
+                        <select name="fruits" id="select" class="select">
+                            <option disabled selected>과목 선택</option>
+                            <option value="korean">국어</option>
+                            <option value="english">영어</option>
+                            <option value="math">수학</option>
+                            <option value="science">과학</option>
+                            <option value="society">사회</option>
+                            <option value="etc">기타</option>
+                        </select>
                     </div>
                 </div>
-                <input type="file" id="chooseFile" name="chooseFile" accept="image/*">
-            </div>
-            <div class="inputWrap">
-                <div class="inputLabel">가격</div>
-                <input class="input" id="price" type="number" name="price" placeholder="가격" min='0' step='1'>
-            </div>
-            <div class="confirmWrap center">
-                <div class="confirmBtn center">게시하기</div>
-            </div>
+                <div class="inputWrap imgInputWrap">
+                    <div class="inputLabel">사진</div>
+                    <div class="imgSelectWrap">
+                        <label for="chooseFile">
+                            <div class="imgSelectBtn center">
+                                <img src="/img/camera.png">
+                            </div>
+                        </label>
+                        <div class="imgSelected center">
+                            <img src="" id="itemImg">
+                        </div>
+                    </div>
+                    <input type="file" id="chooseFile" name="itemImg" accept="image/*">
+                </div>
+                <div class="inputWrap">
+                    <div class="inputLabel">가격</div>
+                    <input class="input" id="price" type="number" name="price" placeholder="가격" min='0' step='1'>
+                </div>
+                <div class="confirmWrap center">
+                    <input type="submit" class="confirmBtn center" value="게시하기"></div>
+                </div>
+            </form>
         </div>
         <div class="footer">
             <div class="nav-item page-not-selected">

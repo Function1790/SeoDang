@@ -33,16 +33,18 @@
             </div>
         </div>
         <div class="container">
-            <div class="loginWrap center">
-                <div class="logoWrap">서당</div>
-                <div class="inputWrap">
-                    <input class="inputText" type="text" name="uid" placeholder="아이디">
-                    <input class="inputText" type="password" name="upw" placeholder="비밀번호">
+            <form action="/login-check" method="POST">
+                <div class="loginWrap center">
+                    <div class="logoWrap">서당</div>
+                    <div class="inputWrap">
+                        <input class="inputText" type="text" name="uid" placeholder="아이디" value="{{uid}}">
+                        <input class="inputText" type="password" name="upw" placeholder="비밀번호">
+                    </div>
+                    <div class="buttonWrap center">
+                        <input type="submit" class="cbutton" value="로그인"></input>
+                    </div>
                 </div>
-                <div class="buttonWrap center">
-                    <div class="cbutton">로그인</div>
-                </div>
-            </div>
+            </form>
         </div>
         <div class="footer">
             <div class="nav-item page-not-selected">

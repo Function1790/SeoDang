@@ -25,7 +25,7 @@ const select = getByID('select')
 const chooseFile = getByID('chooseFile')
 const price = getByID('price')
 
-function toData() {
+function formatData() {
     return {
         title: title.value,
         content: content.value,
