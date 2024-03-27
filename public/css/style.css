@@ -49,6 +49,7 @@ body {
 }
 
 .footer {
+    background-color: white;
     box-sizing: border-box;
     bottom: 0;
     width: 100vw;
@@ -70,13 +71,23 @@ body {
     font-weight: 600;
 }
 
-.topbar-header {}
-
-.topbar-container {
-    flex: 1.5;
+.topbar-header {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    padding-left: 10px;
 }
 
-.topbar-footer {}
+.topbar-container {
+    flex: 0;
+}
+
+.topbar-footer {
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    padding-right: 10px;
+}
 
 .topbar-logo {
     font-size: 25px;

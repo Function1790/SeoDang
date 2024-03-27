@@ -18,7 +18,7 @@ app.use('/views', express.static('views'))
 //Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'public/img/')
+        cb(null, 'public/img/item/')
     },
     filename: (req, file, cb) => {
         cb(null, file.originalname)
@@ -134,8 +134,14 @@ function formatNum(value, len) {
     return result
 }
 
-function formatDatetime(date) {
-    var result = `${date.getFullYear()}년 ${date.getMonth()}월 ${date.getDate()}일`
+function formatDatetime(date, delta=1) {
+    var result = `${date.getFullYear()}년 ${date.getMonth() + delta}월 ${date.getDate()}일`
+    result += ` ${formatNum(date.getHours(), 2)}:${formatNum(date.getMinutes(), 2)}:${formatNum(date.getSeconds(), 2)}`
+    return result
+}
+
+function formatDatetimeInSQL(date, delta = 1) {
+    var result = `${date.getFullYear()}-${date.getMonth() + delta}-${date.getDate()}`
     result += ` ${formatNum(date.getHours(), 2)}:${formatNum(date.getMinutes(), 2)}:${formatNum(date.getSeconds(), 2)}`
     return result
 }
@@ -168,7 +174,7 @@ app.get('/home', async (req, res) => {
 })
 
 app.get('/search', async (req, res) => {
-    const _cate = req.query.category.toString()
+    const _cate = req.query.category ? req.query.category.toString() : ''
     const _condition = _cate ? ` where category='${_cate}'` : ''
     const result = await sqlQuery('select * from item' + _condition)
     var itemsHTML = ''
@@ -177,12 +183,12 @@ app.get('/search', async (req, res) => {
         <a href="/item/${result[i].num}">
             <div class="item">
                 <div class="item-header center">
-                    <div class="item-imgWrap"><img src="/img/item/${result[i].num}.jpg"/></div>
+                    <div class="item-imgWrap"><img src="/img/item/${result[i].imgName}"/></div>
                 </div>
                 <div class="item-container">
                     <div class="item-title">${result[i].title}</div>
                     <div class="item-description">${result[i].seller}</div>
-                    <div class="item-price">${result[i].price}</div>
+                    <div class="item-price">${toFormatMoney(result[i].price)}원</div>
                 </div>
             </div>
         </a>
@@ -206,7 +212,9 @@ app.get('/item/:num', async (req, res) => {
         return
     }
     const _item = result[0]
-
+    //오류 처리
+    const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
+    const seller = userResult[0]
     await sendRender(req, res, './views/item-info.html', {
         num: req.params.num,
         date: formatDatetime(new Date(_item.post_time)),
@@ -214,7 +222,8 @@ app.get('/item/:num', async (req, res) => {
         content: _item.content,
         category: "#" + CategoryToKOR[_item.category],
         category_eng: _item.category,
-        price: toFormatMoney(_item.price) + "원"
+        price: toFormatMoney(_item.price) + "원",
+        imgName: _item.imgName
     })
 })
 
@@ -243,16 +252,43 @@ app.post('/login-check', async (req, res) => {
 })
 
 app.get('/write', async (req, res) => {
-    await sendRender(req, res, './views/write.html')
+    var title = req.query.title ? req.query.title : ''
+    var content = req.query.content ? req.query.content : ''
+    var price = req.query.price ? req.query.price : ''
+    await sendRender(req, res, './views/write.html', {
+        title: title,
+        content: content,
+        price: price
+    })
 })
 
 app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     const { originalname, filename, size } = req.file;
     const body = req.body
-    if (body.name == undefined || body.price == undefined || originalname == undefined) {
-        res.send(goBackWithAlertCode("입력란에 빈칸이 없어야 합니다."))
+    var title = body.title ? body.title : ''
+    var content = body.price ? body.content : ''
+    try {
+        var price = body.price ? body.price : 0
+        price = Number(price)
+    } catch {
+        const link = `/write?title=${title}&content=${content}&price=${price}`
+        res.send(forcedMoveWithAlertCode("가격에서 오류가 났습니다.", link))
+    }
+    if (!body.title || !body.content || !body.category) {
+        const link = `/write?title=${title}&content=${content}&price=${price}`
+        res.send(forcedMoveWithAlertCode("입력란에 빈칸이 없어야 합니다.", link))
+        return
+    } else if (price < 0) {
+        const link = `/write?title=${title}&content=${content}&price=${price}`
+        res.send(forcedMoveWithAlertCode("가격은 음수가 아니여야합니다.", link))
         return
     }
+    title = body.title.replaceAll('<', '< ')
+    content = body.content.replaceAll('<', '< ')
+    var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, imgName) '
+    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "010-0000-0000", "${formatDatetimeInSQL(new Date())}", 0, "guest", "${originalname}");`
+    await sqlQuery(query)
+    await res.send(forcedMoveCode(`/search?category=${body.category}`))
 })
 
 app.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))

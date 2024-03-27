@@ -15,7 +15,7 @@
             <div class="topbar-header">
                 <div class="gobackBtn">
                     <a href="/home">
-                        <img src="/img/arrow.png" class="arrowBtn" alt="">
+                        <img src="/img/buttonIcon/arrow.png" class="arrowBtn" alt="">
                     </a>
                 </div>
                 <div>글쓰기</div>
@@ -25,10 +25,10 @@
             </div>
             <div class="topbar-footer">
                 <div class="tool page-not-selected">
-                    <img class="nav-icon" src="/img/search.png" />
+                    <img class="nav-icon" src="/img/buttonIcon/search.png" />
                 </div>
                 <div class="tool page-not-selected">
-                    <img class="nav-icon" src="/img/alert.png" />
+                    <img class="nav-icon" src="/img/buttonIcon/alert.png" />
                 </div>
             </div>
         </div>
@@ -36,16 +36,16 @@
             <form action="/write-check" method="post" enctype="multipart/form-data">
                 <div class="inputWrap">
                     <div class="inputLabel">제목</div>
-                    <input class="input" id="title" type="text" name="title" placeholder="제목">
+                    <input class="input" id="title" type="text" name="title" placeholder="제목" value="{{title}}">
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">설명</div>
-                    <textarea class="input input-long" id="content" type="text" name="content"></textarea>
+                    <textarea class="input input-long" id="content" type="text" name="content" value="">{{content}}</textarea>
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">과목</div>
                     <div class="input selectwrap">
-                        <select name="fruits" id="select" class="select">
+                        <select name="category" id="select" class="select">
                             <option disabled selected>과목 선택</option>
                             <option value="korean">국어</option>
                             <option value="english">영어</option>
@@ -61,7 +61,7 @@
                     <div class="imgSelectWrap">
                         <label for="chooseFile">
                             <div class="imgSelectBtn center">
-                                <img src="/img/camera.png">
+                                <img src="/img/buttonIcon/camera.png">
                             </div>
                         </label>
                         <div class="imgSelected center">
@@ -72,7 +72,7 @@
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">가격</div>
-                    <input class="input" id="price" type="number" name="price" placeholder="가격" min='0' step='1'>
+                    <input class="input" id="price" type="number" name="price" placeholder="가격" min='0' step='1' value="{{price}}">
                 </div>
                 <div class="confirmWrap center">
                     <input type="submit" class="confirmBtn center" value="게시하기"></div>
@@ -82,17 +82,17 @@
         <div class="footer">
             <div class="nav-item page-not-selected">
                 <a href="/home">
-                    <img class="nav-icon" src="/img/home2.png" />
+                    <img class="nav-icon" src="/img/buttonIcon/home2.png" />
                 </a>
             </div>
             <div class="nav-item page-selected">
                 <a href="/write">
-                    <img class="nav-icon" src="/img/write.png" />
+                    <img class="nav-icon" src="/img/buttonIcon/write.png" />
                 </a>
             </div>
             <div class="nav-item page-not-selected">
                 <a herf="/profile">
-                    <img class="nav-icon" src="/img/user.png" />
+                    <img class="nav-icon" src="/img/buttonIcon/user.png" />
                 </a>
             </div>
         </div>
