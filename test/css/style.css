@@ -92,6 +92,7 @@ body {
 .nav-icon{
     width: 30px;
     height: 30px;
+    position: cursor;
 }
 
 .page-not-selected{

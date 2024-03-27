@@ -25,12 +25,29 @@
             </div>
             <div class="topbar-footer">
                 <div class="tool page-not-selected">
-                    <img class="nav-icon" src="./img/search.png" />
+                    <img class="nav-icon" id="searchBtn" src="./img/search.png" />
                 </div>
                 <div class="tool page-not-selected">
                     <img class="nav-icon" src="./img/alert.png" />
                 </div>
             </div>
+            <!--Search-->
+            <form action="/search" method="get" id="formSearch">
+                <div class="searcherWrap center" id="searcherWrap">
+                    <div class="searcherBack">
+                        <div class="gobackBtn">
+                            <img src="./img/arrow.png" class="arrowBtn" alt="back">
+                        </div>
+                    </div>
+                    <div class="searcher">
+                        <input class="searchInput" type="text" name="data" placeholder="검색어를 입력하세요.">
+                        <div class="searchGo center">
+                            <img class="nav-icon" id="searchGoBtn" src="./img/search.png" />
+                        </div>
+                    </div>
+                </div>
+            </form>
+
         </div>
         <div class="container">
             <div class="item">
@@ -63,6 +80,7 @@
             </div>
         </div>
     </div>
+    <script src="src/search.js"></script>
 </body>
 
 </html>

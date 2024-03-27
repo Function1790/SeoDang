@@ -134,7 +134,7 @@ function formatNum(value, len) {
     return result
 }
 
-function formatDatetime(date, delta=1) {
+function formatDatetime(date, delta = 1) {
     var result = `${date.getFullYear()}년 ${date.getMonth() + delta}월 ${date.getDate()}일`
     result += ` ${formatNum(date.getHours(), 2)}:${formatNum(date.getMinutes(), 2)}:${formatNum(date.getSeconds(), 2)}`
     return result
@@ -162,6 +162,15 @@ function isCorrectSQLResult(result) {
     }
 }
 
+function isExistKeyword(text, keywords) {
+    for (var i in keywords) {
+        if (text.indexOf(keywords[i]) == -1) {
+            return false
+        }
+    }
+    return true
+}
+
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -174,11 +183,19 @@ app.get('/home', async (req, res) => {
 })
 
 app.get('/search', async (req, res) => {
+    const _find = req.query.data ? req.query.data.split(" ") : null
     const _cate = req.query.category ? req.query.category.toString() : ''
     const _condition = _cate ? ` where category='${_cate}'` : ''
     const result = await sqlQuery('select * from item' + _condition)
     var itemsHTML = ''
     for (var i in result) {
+        if (_find) {
+            var isInTitle = isExistKeyword(result[i].title, _find)
+            var isInContent = isExistKeyword(result[i].content, _find)
+            if (!isInTitle && !isInContent) {
+                continue
+            }
+        }
         itemsHTML += `
         <a href="/item/${result[i].num}">
             <div class="item">
