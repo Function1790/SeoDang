@@ -1,0 +1,41 @@
+.loginWrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.logoWrap {
+    font-size: 40px;
+    font-weight: 900;
+    margin: 40px 0;
+}
+
+.inputWrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.inputText {
+    width: 250px;
+    height: 50px;
+    margin: 5px;
+    border: 2px solid rgb(209, 209, 209);
+    border-radius: 2px;
+    padding: 10px;
+    font-size: 16px;
+    transition: 0.2s;
+}
+
+.inputText:hover {
+    border: 2px solid #ffba6c;
+}
+
+.buttonWrap {
+    margin-top: 50px;
+}
+
+.cbutton {
+    width: 250px;
+    border-radius: 100px;
+}
