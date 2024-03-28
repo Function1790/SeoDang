@@ -105,3 +105,18 @@
     justify-content: space-between;
     align-items: center;
 }
+
+.wrap-with-date {
+    display: flex;
+    justify-content: space-between;
+}
+
+.modify-button {
+    color: #949494;
+    width: 65px;
+    font-size: 14px;
+}
+
+.modify-button:hover {
+    color: #f89e37;
+}

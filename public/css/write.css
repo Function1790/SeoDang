@@ -124,6 +124,9 @@ label {
 
 .confirmWrap {
     padding: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
 }
 
 .confirmBtn {
@@ -139,11 +142,15 @@ label {
 }
 
 .confirmBtn:hover {
-    border: 3px solid #ffba6c;
     background-color: #ffffff;
     color: #ffba6c;
-    font-weight: 700;
-    font-size: 18px;
-    width: 100px;
-    height: 50px;
+}
+
+.deleteBtn {
+    background-color: rgb(255, 116, 116);
+    border: 3px solid rgb(255, 116, 116);
+}
+
+.deleteBtn:hover {
+    color: rgb(255, 116, 116);
 }

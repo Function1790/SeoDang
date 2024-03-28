@@ -37,19 +37,15 @@
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">설명</div>
-                    <textarea class="input input-long" id="content" type="text" name="content" value="">{{content}}</textarea>
+                    <textarea class="input input-long" id="content" type="text" name="content"
+                        value="">{{content}}</textarea>
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">과목</div>
                     <div class="input selectwrap">
                         <select name="category" id="select" class="select" value="korean">
                             <option disabled selected hidden required="required">과목 선택</option>
-                            <option value="korean">국어</option>
-                            <option value="english">영어</option>
-                            <option value="math">수학</option>
-                            <option value="science">과학</option>
-                            <option value="society">사회</option>
-                            <option value="etc">기타</option>
+                            {{category}}
                         </select>
                     </div>
                 </div>
@@ -69,10 +65,14 @@
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">가격</div>
-                    <input class="input" id="price" type="number" name="price" placeholder="가격" min='0' step='1' value="{{price}}">
+                    <input class="input" id="price" type="number" name="price" placeholder="가격" min='0' step='1'
+                        value="{{price}}">
                 </div>
                 <div class="confirmWrap center">
-                    <input type="submit" class="confirmBtn center" value="저장하기"></div>
+                    <input type="submit" class="confirmBtn" value="저장하기">
+                    <a href="/delete/{{num}}">
+                        <div class="confirmBtn center deleteBtn">삭제하기</div>
+                    </a>
                 </div>
             </form>
         </div>
