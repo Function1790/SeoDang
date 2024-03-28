@@ -33,7 +33,7 @@
     overflow: hidden;
 }
 
-.item-imgWrap > img {
+.item-imgWrap>img {
     width: 100%;
     height: 100%;
 }
@@ -47,6 +47,15 @@
     font-weight: 400;
 }
 
-.item-price{
+.item-price {
     font-weight: 400;
+}
+
+.notFound {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    font-size: 20px;
+    color: #555;
 }

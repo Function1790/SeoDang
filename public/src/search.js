@@ -8,6 +8,9 @@ const searchGo = document.getElementsByClassName('searchGo')[0]
 function setDisplay(display) {
     searcherWrap.style.display = display
     formSearch.style.display = display
+    if(display=='flex'){
+        searchInput.focus()
+    }
 }
 
 setDisplay('none')

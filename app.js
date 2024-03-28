@@ -73,7 +73,7 @@ const cookieConfig = {
     signed: true
 }
 
-//Const
+//<----------Setting---------->
 const CategoryToKOR = {
     "korean": "국어",
     "english": "영어",
@@ -122,6 +122,7 @@ async function renderFile(req, path, replaceItems = {}) {
     return content
 }
 
+/** res.send(renderFile(...)) */
 async function sendRender(req, res, path, replaceItems = {}) {
     res.send(await renderFile(req, path, replaceItems))
 }
@@ -171,6 +172,47 @@ function isExistKeyword(text, keywords) {
     return true
 }
 
+/** !isLogined = 로그인 X -> res.send */
+function isLogined(req, res) {
+    if (req.session.uid == undefined) {
+        res.send(forcedMoveWithAlertCode("로그인이 필요한 서비스입니다.", '/login'))
+        return false
+    }
+    return true
+}
+
+function checkPost(req, res, path='write') {
+    const body = req.body
+    var title = body.title ? body.title : ''
+    var content = body.price ? body.content : ''
+    try {
+        var price = body.price ? body.price : 0
+        price = Number(price)
+    } catch {
+        const link = `/${path}?title=${title}&content=${content}&price=${price}`
+        res.send(forcedMoveWithAlertCode("가격에서 오류가 났습니다.", link))
+        return false
+    }
+    try {
+        const { originalname, filename, size } = req.file;
+    } catch {
+        const link = `/${path}?title=${title}&content=${content}&price=${price}`
+        res.send(forcedMoveWithAlertCode("파일을 선택해주세요.", link))
+        return false
+    }
+    if (!body.title || !body.content || !body.category) {
+        const link = `/${path}?title=${title}&content=${content}&price=${price}`
+        res.send(forcedMoveWithAlertCode("입력란에 빈칸이 없어야 합니다.", link))
+        return false
+    } else if (price < 0) {
+        const link = `/${path}?title=${title}&content=${content}&price=${price}`
+        res.send(forcedMoveWithAlertCode("가격은 음수가 아니여야합니다.", link))
+        return false
+    }
+    return true
+}
+
+//<----------Server---------->
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -212,8 +254,8 @@ app.get('/search', async (req, res) => {
     `
     }
     await sendRender(req, res, './views/search.html', {
-        items: itemsHTML,
-        category: req.query.category == undefined ? '거래' : CategoryToKOR[req.query.category]
+        items: itemsHTML ? itemsHTML : "<div class='notFound'>게시물을 찾을 수 없습니다.</div>",
+        category: _find ? "검색" : (req.query.category == undefined ? '거래' : CategoryToKOR[req.query.category])
     })
 })
 
@@ -251,6 +293,15 @@ app.get('/login', async (req, res) => {
     })
 })
 
+app.get('/logout', (req, res) => {
+    req.session.name = null
+    req.session.nickname = null
+    req.session.uid = null
+    req.session.num = null
+    req.session.isLogined = false
+    res.send(forcedMoveWithAlertCode('로그아웃 되셨습니다.', '/'))
+})
+
 app.post('/login-check', async (req, res) => {
     const body = req.body
     const uid = connection.escape(body.uid)
@@ -269,6 +320,9 @@ app.post('/login-check', async (req, res) => {
 })
 
 app.get('/write', async (req, res) => {
+    if (!isLogined(req, res)) {
+        return
+    }
     var title = req.query.title ? req.query.title : ''
     var content = req.query.content ? req.query.content : ''
     var price = req.query.price ? req.query.price : ''
@@ -280,32 +334,90 @@ app.get('/write', async (req, res) => {
 })
 
 app.post('/write-check', upload.single('itemImg'), async (req, res) => {
-    const { originalname, filename, size } = req.file;
+    if (!isLogined(req, res)) {
+        return
+    }
+    if (!checkPost(req, res)) {
+        return
+    }
     const body = req.body
-    var title = body.title ? body.title : ''
-    var content = body.price ? body.content : ''
-    try {
-        var price = body.price ? body.price : 0
-        price = Number(price)
-    } catch {
-        const link = `/write?title=${title}&content=${content}&price=${price}`
-        res.send(forcedMoveWithAlertCode("가격에서 오류가 났습니다.", link))
-    }
-    if (!body.title || !body.content || !body.category) {
-        const link = `/write?title=${title}&content=${content}&price=${price}`
-        res.send(forcedMoveWithAlertCode("입력란에 빈칸이 없어야 합니다.", link))
-        return
-    } else if (price < 0) {
-        const link = `/write?title=${title}&content=${content}&price=${price}`
-        res.send(forcedMoveWithAlertCode("가격은 음수가 아니여야합니다.", link))
-        return
-    }
-    title = body.title.replaceAll('<', '< ')
-    content = body.content.replaceAll('<', '< ')
-    var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, imgName) '
-    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "010-0000-0000", "${formatDatetimeInSQL(new Date())}", 0, "guest", "${originalname}");`
+    const { originalname, filename, size } = req.file;
+    var price = body.price ? body.price : 0
+    price = Number(price)
+    var title = body.title.replaceAll('<', '< ')
+    var content = body.content.replaceAll('<', '< ')
+
+    var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName) '
+    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "010-0000-0000", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${originalname}");`
     await sqlQuery(query)
     await res.send(forcedMoveCode(`/search?category=${body.category}`))
+})
+
+app.get('/profile', async (req, res) => {
+    if (!isLogined(req, res)) {
+        return
+    }
+    const result = await sqlQuery(`select * from user where num=${req.session.num}`)
+
+    await sendRender(req, res, './views/profile.html', {
+        nickname: result[0].nickname,
+        uid: result[0].uid,
+        schoolid: result[0].schoolid
+    })
+})
+
+app.get('/modify/:num', async (req, res) => {
+    const result = await sqlQuery(`select * from item where num=${req.params.num}`)
+    try {
+        if (result.length === 0) {
+            res.send(forcedMoveWithAlertCode('해당 게시물을 찾을 수 없습니다.', '/'))
+            return
+        }
+    } catch {
+        res.send(forcedMoveWithAlertCode('해당 게시물을 찾을 수 없습니다.', '/'))
+        return
+    }
+    const _item = result[0]
+    //오류 처리
+    const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
+    const seller = userResult[0]
+    if (!seller.num == req.session.num) {
+        res.send(forcedMoveWithAlertCode('게시물을 수정할 수 있는 권한이 없습니다.', '/'))
+        return
+    }
+    await sendRender(req, res, './views/modify.html', {
+        num: req.params.num,
+        date: formatDatetime(new Date(_item.post_time)),
+        title: _item.title,
+        content: _item.content,
+        price: _item.price,
+        imgName: _item.imgName
+    })
+})
+
+app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
+    if (!isLogined(req, res)) {
+        return
+    }
+    if (!checkPost(req, res, 'modify')) {
+        return
+    }
+    const body = req.body
+    const { originalname, filename, size } = req.file;
+    var price = body.price ? body.price : 0
+    price = Number(price)
+    var title = body.title.replaceAll('<', '< ')
+    var content = body.content.replaceAll('<', '< ')
+
+    var query = 'update item set '
+    query += `title='${title}' , `
+    query += `content='${content}' , `
+    query += `category='${body.category}' , `
+    query += `price=${price} , `
+    query += `imgName='${originalname}' `
+    query += `where num=${req.params.num}`
+    await sqlQuery(query)
+    await res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
 
 app.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))

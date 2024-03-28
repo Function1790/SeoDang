@@ -30,7 +30,7 @@
             </div>
         </div>
         <div class="container">
-            <form action="/write-check" method="post" enctype="multipart/form-data">
+            <form action="/modify-check/{{num}}" method="post" enctype="multipart/form-data">
                 <div class="inputWrap">
                     <div class="inputLabel">제목</div>
                     <input class="input" id="title" type="text" name="title" placeholder="제목" value="{{title}}">
@@ -42,7 +42,7 @@
                 <div class="inputWrap">
                     <div class="inputLabel">과목</div>
                     <div class="input selectwrap">
-                        <select name="category" id="select" class="select">
+                        <select name="category" id="select" class="select" value="korean">
                             <option disabled selected hidden required="required">과목 선택</option>
                             <option value="korean">국어</option>
                             <option value="english">영어</option>
@@ -62,7 +62,7 @@
                             </div>
                         </label>
                         <div class="imgSelected center">
-                            <img src="" id="itemImg">
+                            <img src="/img/item/{{imgName}}" id="itemImg">
                         </div>
                     </div>
                     <input type="file" id="chooseFile" name="itemImg" accept="image/*">
@@ -72,7 +72,7 @@
                     <input class="input" id="price" type="number" name="price" placeholder="가격" min='0' step='1' value="{{price}}">
                 </div>
                 <div class="confirmWrap center">
-                    <input type="submit" class="confirmBtn center" value="게시하기"></div>
+                    <input type="submit" class="confirmBtn center" value="저장하기"></div>
                 </div>
             </form>
         </div>
