@@ -1,0 +1,43 @@
+.item-imgWrap {
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+}
+
+.item {
+    height: 100px;
+    border-bottom: 1px solid lightgrey;
+    display: flex;
+    flex-direction: row;
+}
+
+.item-header {
+    width: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.item-container {
+    margin-left: 0px;
+    flex: 1;
+    display: flex;
+    align-items: left;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.item-content {
+    font-size: 17px;
+    padding: 15px;
+    padding-left: 0;
+    cursor: pointer;
+}
+
+.item:hover {
+    background-color: #f9f9f9;
+}
+
+.bold {
+    font-weight: 600;
+}

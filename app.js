@@ -181,7 +181,7 @@ function isLogined(req, res) {
     return true
 }
 
-function checkPost(req, res, path = 'write') {
+function checkPost(req, res, path = 'write', isNotImg = false) {
     const body = req.body
     var title = body.title ? body.title : ''
     var content = body.price ? body.content : ''
@@ -197,9 +197,11 @@ function checkPost(req, res, path = 'write') {
     try {
         const { originalname, filename, size } = req.file;
     } catch {
-        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
-        res.send(forcedMoveWithAlertCode("파일을 선택해주세요.", link))
-        return false
+        if (!isNotImg) {
+            const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
+            res.send(forcedMoveWithAlertCode("파일을 선택해주세요.", link))
+            return false
+        }
     }
     if (!body.title || !body.content || !body.category) {
         const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
@@ -257,6 +259,11 @@ function getCallerHTML(req, sqlResult) {
             </div>
         </div>
     </div>`
+}
+
+async function sendAlert(req, content, link) {
+    var query = `insert into alert (listener_num, content, post_time, isRead, link) value (${req.session.num}, '${content}', '${formatDatetimeInSQL(new Date())}', 0, '${link}');`
+    await sqlQuery(query)
 }
 
 //<----------Server---------->
@@ -478,11 +485,15 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
-    if (!checkPost(req, res, `modify/${req.query.params}`)) {
+    if (!checkPost(req, res, `modify/${req.query.params}`, true)) {
         return
     }
     const body = req.body
-    const { originalname, filename, size } = req.file;
+    if (!req.file) {
+        var originalname = ''
+    } else {
+        var { originalname, filename, size } = req.file;
+    }
     var price = body.price ? body.price : 0
     price = Number(price)
     var title = body.title.replaceAll('<', '< ')
@@ -493,9 +504,10 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     query += `content='${content}' , `
     query += `category='${body.category}' , `
     query += `price=${price} , `
-    query += `imgName='${originalname}' `
+    query += !Boolean(originalname) ? '' : `imgName='${originalname}' `
     query += `where num=${req.params.num}`
     await sqlQuery(query)
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 수정하였습니다.`, `/item/${req.params.num}`)
     await res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
 
@@ -523,6 +535,26 @@ app.get('/delete/:num', async (req, res) => {
 
     await sqlQuery(`delete from item where num=${req.params.num}`)
     await res.send(forcedMoveCode(`/search?category=${result[0].category}`))
+})
+
+app.get('/alert', async (req, res) => {
+    const result = await sqlQuery(`select * from alert where listener_num=${req.session.num}`)
+    var alertHTML = ''
+    for (var i in result) {
+        alertHTML += `<a href="${result[i].link}">
+            <div class="item">
+                <div class="item-header center">
+                    <div class="item-imgWrap"></div>
+                </div>
+                <div class="item-container">
+                    <div class="item-content">${result[i].content}</div>
+                </div>
+            </div>
+        </a>`
+    }
+    await sendRender(req, res, './views/alert.html', {
+        alert: alertHTML
+    })
 })
 
 app.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))

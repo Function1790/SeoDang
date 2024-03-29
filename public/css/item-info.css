@@ -121,3 +121,10 @@
     overflow-y: scroll;
     height: 120px;
 }
+
+.wrap-with-date {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}

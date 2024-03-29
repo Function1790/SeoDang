@@ -29,3 +29,14 @@ insert into item (title, content, category, price, contact, post_time, isSelled,
 insert into item (title, content, category, price, contact, post_time, isSelled, seller, imgName) values ("블루투스 스피커요", "잘되긴하는데 중간에 끊겨요.", "korean", 1000, "010-0000-0000", "2024-03-27 09:04:30", 0, "guest", "2.jpg");
 insert into item (title, content, category, price, contact, post_time, isSelled, seller, imgName) values ("서령고 ㅈㅈ", "이제 버려요.", "math", 1000, "010-0000-0000", "2024-03-27 09:04:30", 0, "guest", "3.jpg");
 update item set seller_num=1 ;
+
+create table alert(
+    num int not null auto_increment, 
+    listener_num int not null, 
+    content text not null, 
+    post_time datetime not null,
+    isRead tinyint,
+    link text not null,
+    primary key(num)
+);
+insert into item (listener_num, content, post_time, isRead, link) value (1, '이건 테스트입니다', '2024-03-29 7:37:00', 0, '/item/1');
