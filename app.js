@@ -84,8 +84,8 @@ const CategoryToKOR = {
 }
 const CategoryToENG = Object
     .entries(CategoryToKOR)
-    .map(([key, value]) => [value, key]);
-
+    .map(([key, value]) => [value, key])
+const COUNT_PER_PAGE = 20
 //<----------Function---------->
 const print = (data) => console.log(data)
 
@@ -229,6 +229,36 @@ function loginGuess(req) {
     req.session.isLogined = true
 }
 
+/** 성공시 Number, 실패시 0 */
+function toNumber(value) {
+    try {
+        var result = value ? Number(value) : 0
+        return result
+    } catch {
+        return 0
+    }
+}
+
+function getCallerHTML(req, sqlResult) {
+    if (!req.session.num) {
+        return ''
+    }
+    return `
+    <div class="wrapCaller center">
+        <div class="caller">
+            <div class="caller-header">
+                <div class="caller-title center">연락처 </div>
+                <div class="closeBtn center">x</div>
+            </div>
+            <div class="caller-container center">
+                <div class="textWrap">
+                    ${sqlResult.contact}
+                </div>
+            </div>
+        </div>
+    </div>`
+}
+
 //<----------Server---------->
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -242,11 +272,16 @@ app.get('/home', async (req, res) => {
     await sendRender(req, res, './views/home.html')
 })
 
+
 app.get('/search', async (req, res) => {
-    const _find = req.query.data ? req.query.data.split(" ") : null
+    const _find = req.query.data ? req.query.data.split(" ") : ''
     const _cate = req.query.category ? req.query.category.toString() : ''
+    const _page_index = toNumber(req.query.page)
+    const _page = _page_index * COUNT_PER_PAGE
     const _condition = _cate ? ` where category='${_cate}'` : ''
-    const result = await sqlQuery('select * from item' + _condition)
+    const result = await sqlQuery('select * from item' + _condition + ` limit ${_page}, ${COUNT_PER_PAGE}`)
+    var max_page = await sqlQuery('select count(num) from item' + _condition)
+    max_page = Math.floor(toNumber(max_page[0]['count(num)']) / COUNT_PER_PAGE)
     var itemsHTML = ''
     for (var i in result) {
         if (_find) {
@@ -271,9 +306,22 @@ app.get('/search', async (req, res) => {
         </a>
     `
     }
+
+    var url = `/search?data=${_find}&category=${_cate}&page=`
+    var backHTML = '<div class="pageBtn center dontgo">←</div>'
+    var nextHTML = '<div class="pageBtn center dontgo">→</div>'
+    if (_page_index > 0) {
+        backHTML = `<a href='${url}${_page_index - 1}'><div class="pageBtn center">←</div></a>`
+    }
+    if (_page_index < max_page - 1) {
+        nextHTML = `<a href='${url}${_page_index + 1}'><div class="pageBtn center">→</div></a>`
+    }
     await sendRender(req, res, './views/search.html', {
         items: itemsHTML ? itemsHTML : "<div class='notFound'>게시물을 찾을 수 없습니다.</div>",
-        category: _find ? "검색" : (req.query.category == undefined ? '거래' : CategoryToKOR[req.query.category])
+        category: _find ? "검색" : (req.query.category == undefined ? '거래' : CategoryToKOR[req.query.category]),
+        pageNum: _page_index + 1,
+        gotoBack: backHTML,
+        gotoNext: nextHTML
     })
 })
 
@@ -299,6 +347,7 @@ app.get('/item/:num', async (req, res) => {
             <div class="modify-button center">수정하기</div>
         </a>`
     }
+    var callerHTML = getCallerHTML(req, _item)
     await sendRender(req, res, './views/item-info.html', {
         num: req.params.num,
         date: formatDatetime(new Date(_item.post_time)),
@@ -308,7 +357,8 @@ app.get('/item/:num', async (req, res) => {
         category_eng: _item.category,
         price: toFormatMoney(_item.price) + "원",
         imgName: _item.imgName,
-        modify: modifyHTML
+        modify: modifyHTML,
+        caller: callerHTML
     })
 })
 

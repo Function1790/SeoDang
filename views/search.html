@@ -48,7 +48,14 @@
             </form>
         </div>
         <div class="container">
-            {{items}}
+            <div class="itemWrap">
+                {{items}}
+            </div>
+            <div class="countWrap center">
+                {{gotoBack}}
+                <div class="page-number center">{{pageNum}}</div>
+                {{gotoNext}}
+            </div>
         </div>
         <div class="footer">
             <div class="nav-item page-selected">
