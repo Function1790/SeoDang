@@ -116,6 +116,15 @@ function goBackWithAlertCode(text) {
 async function renderFile(req, path, replaceItems = {}) {
     var content = await readFile(path)
 
+    var alertIMG = 'alert'
+    if (req.session.isLogined) {
+        var alertResult = await sqlQuery(`select * from alert where isRead=0 and listener_num=${req.session.num} limit 1`)
+        if (alertResult.length) {
+            alertIMG = 'alertPing'
+        }
+    }
+    content = content.replace('{{alert_state}}', alertIMG)
+
     for (i in replaceItems) {
         content = content.replaceAll(`{{${i}}}`, replaceItems[i])
     }
@@ -285,10 +294,15 @@ app.get('/search', async (req, res) => {
     const _cate = req.query.category ? req.query.category.toString() : ''
     const _page_index = toNumber(req.query.page)
     const _page = _page_index * COUNT_PER_PAGE
-    const _condition = _cate ? ` where category='${_cate}'` : ''
-    const result = await sqlQuery('select * from item' + _condition + ` limit ${_page}, ${COUNT_PER_PAGE}`)
+    var _condition = _cate ? ` where category='${_cate}'` : ''
+    if (_condition) {
+        _condition += req.query.creator ? ` and seller='${req.query.creator}'` : ''
+    } else {
+        _condition += req.query.creator ? ` where seller='${req.query.creator}'` : ''
+    }
+    const result = await sqlQuery('select * from item' + _condition + ` order by num desc limit ${_page}, ${COUNT_PER_PAGE}`)
     var max_page = await sqlQuery('select count(num) from item' + _condition)
-    max_page = Math.floor(toNumber(max_page[0]['count(num)']) / COUNT_PER_PAGE)
+    max_page = Math.ceil(toNumber(max_page[0]['count(num)']) / COUNT_PER_PAGE)
     var itemsHTML = ''
     for (var i in result) {
         if (_find) {
@@ -307,7 +321,7 @@ app.get('/search', async (req, res) => {
                 <div class="item-container">
                     <div class="item-title">${result[i].title}</div>
                     <div class="item-description">${result[i].seller}</div>
-                    <div class="item-price">${toFormatMoney(result[i].price)}원</div>
+                    <div class="item-price">${result[i].price == 0 ? '무료' : toFormatMoney(result[i].price) + '원'}</div>
                 </div>
             </div>
         </a>
@@ -362,7 +376,7 @@ app.get('/item/:num', async (req, res) => {
         content: _item.content,
         category: "#" + CategoryToKOR[_item.category],
         category_eng: _item.category,
-        price: toFormatMoney(_item.price) + "원",
+        price: _item.price == 0 ? '무료' : toFormatMoney(_item.price) + '원',
         imgName: _item.imgName,
         modify: modifyHTML,
         caller: callerHTML
@@ -434,6 +448,9 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName) '
     query += `values ("${title}"," ${content}", "${body.category}", ${price}, "010-0000-0000", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${originalname}");`
     await sqlQuery(query)
+    var lastIndex = await sqlQuery('select num from item order by num desc limit 1')
+
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 생성하였습니다.`, `/item/${lastIndex[0].num}`)
     await res.send(forcedMoveCode(`/search?category=${body.category}`))
 })
 
@@ -503,12 +520,12 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     query += `title='${title}' , `
     query += `content='${content}' , `
     query += `category='${body.category}' , `
-    query += `price=${price} , `
-    query += !Boolean(originalname) ? '' : `imgName='${originalname}' `
+    query += `price=${price} `
+    query += !Boolean(originalname) ? '' : `,imgName='${originalname}' `
     query += `where num=${req.params.num}`
     await sqlQuery(query)
     await sendAlert(req, `<span class="bold">${title}</span> 게시물을 수정하였습니다.`, `/item/${req.params.num}`)
-    await res.send(forcedMoveCode(`/item/${req.params.num}`))
+    res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
 
 app.get('/delete/:num', async (req, res) => {
@@ -538,13 +555,17 @@ app.get('/delete/:num', async (req, res) => {
 })
 
 app.get('/alert', async (req, res) => {
-    const result = await sqlQuery(`select * from alert where listener_num=${req.session.num}`)
+    if (!isLogined(req, res)) {
+        return
+    }
+
+    const result = await sqlQuery(`select * from alert where listener_num=${req.session.num} order by num desc`)
     var alertHTML = ''
     for (var i in result) {
         alertHTML += `<a href="${result[i].link}">
-            <div class="item">
+            <div class="item ${result[i].isRead ? 'read' : ''}">
                 <div class="item-header center">
-                    <div class="item-imgWrap"></div>
+                    <div class="item-imgWrap"><img src='/img/icon/carrot.png'></div>
                 </div>
                 <div class="item-container">
                     <div class="item-content">${result[i].content}</div>
@@ -553,8 +574,9 @@ app.get('/alert', async (req, res) => {
         </a>`
     }
     await sendRender(req, res, './views/alert.html', {
-        alert: alertHTML
+        alert: alertHTML,
     })
+    await sqlQuery(`update alert set isRead=1 where listener_num=${req.session.num} `)
 })
 
 app.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))

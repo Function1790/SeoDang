@@ -22,9 +22,11 @@
                 <div class="tool page-not-selected">
                     <img class="nav-icon" id="searchBtn" src="/img/buttonIcon/search.png" />
                 </div>
-                <div class="tool page-not-selected">
-                    <img class="nav-icon" src="/img/buttonIcon/alert.png" />
-                </div>
+                <a href="/alert">
+                    <div class="tool page-not-selected">
+                        <img class="nav-icon" src="/img/buttonIcon/{{alert_state}}.png" />
+                    </div>
+                </a>
             </div>
             <form action="/search" method="get" id="formSearch">
                 <div class="searcherWrap center" id="searcherWrap">
@@ -51,6 +53,9 @@
                         <div class="dataWrap center">{{uid}}</div>
                         <div class="dataWrap center">{{schoolid}}</div>
                         <div class="center btnWrap">
+                            <a href="/search?creator={{uid}}">
+                                <div class="cbutton">내 글</div>
+                            </a>
                             <a href="/logout">
                                 <div class="cbutton">로그아웃</div>
                             </a>

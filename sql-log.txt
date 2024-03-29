@@ -39,4 +39,4 @@ create table alert(
     link text not null,
     primary key(num)
 );
-insert into item (listener_num, content, post_time, isRead, link) value (1, '이건 테스트입니다', '2024-03-29 7:37:00', 0, '/item/1');
+insert into alert (listener_num, content, post_time, isRead, link) value (1, '이건 테스트입니다', '2024-03-29 7:37:00', 0, '/item/1');

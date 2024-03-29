@@ -19,7 +19,7 @@
                         <img src="/img/buttonIcon/arrow.png" class="arrowBtn" alt="">
                     </a>
                 </div>
-                <div>{{category}}</div>
+                <div>알림</div>
             </div>
             <div class="topbar-container">
                 <div class="topbar-logo"></div>
@@ -28,9 +28,11 @@
                 <div class="tool page-not-selected">
                     <img class="nav-icon" id="searchBtn" src="/img/buttonIcon/search.png" />
                 </div>
-                <div class="tool page-not-selected">
-                    <img class="nav-icon" src="/img/buttonIcon/alert.png" />
-                </div>
+                <a href="/alert">
+                    <div class="tool page-not-selected">
+                        <img class="nav-icon" src="/img/buttonIcon/{{alert_state}}.png" />
+                    </div>
+                </a>
             </div>
             <form action="/search" method="get" id="formSearch">
                 <div class="searcherWrap center" id="searcherWrap">

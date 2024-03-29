@@ -9,7 +9,11 @@
     border: 1px solid #a0a0a0;
 }
 
-
 .btnWrap {
     margin-top: 40px;
+    flex-direction: column;
+}
+
+.btnWrap>*{
+    margin-top: 10px;
 }
