@@ -240,6 +240,14 @@ function loginGuess(req) {
     req.session.isLogined = true
 }
 
+function loginAdmin(req) {
+    req.session.name = '관리자'
+    req.session.nickname = '관리자'
+    req.session.uid = 'admin'
+    req.session.num = 4
+    req.session.isLogined = true
+}
+
 /** 성공시 Number, 실패시 0 */
 function toNumber(value) {
     try {
@@ -248,6 +256,13 @@ function toNumber(value) {
     } catch {
         return 0
     }
+}
+
+function isAdmin(req) {
+    if (req.session.uid === 'admin') {
+        return true
+    }
+    return false
 }
 
 function getCallerHTML(req, sqlResult) {
@@ -270,8 +285,9 @@ function getCallerHTML(req, sqlResult) {
     </div>`
 }
 
-async function sendAlert(req, content, link) {
-    var query = `insert into alert (listener_num, content, post_time, isRead, link) value (${req.session.num}, '${content}', '${formatDatetimeInSQL(new Date())}', 0, '${link}');`
+async function sendAlert(req, content, link, listener_num = '') {
+    var listener_num = listener_num ? listener_num : req.session.num
+    var query = `insert into alert (listener_num, content, post_time, isRead, link) value (${listener_num}, '${content}', '${formatDatetimeInSQL(new Date())}', 0, '${link}');`
     await sqlQuery(query)
 }
 
@@ -284,7 +300,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/home', async (req, res) => {
-    loginGuess(req)
+    //loginAdmin(req)
     await sendRender(req, res, './views/home.html')
 })
 
@@ -363,7 +379,7 @@ app.get('/item/:num', async (req, res) => {
     const seller = userResult[0]
 
     var modifyHTML = ''
-    if (req.session.num == _item.seller_num) {
+    if (req.session.num == _item.seller_num || isAdmin(req)) {
         modifyHTML = `<a href="/modify/${_item.num}">
             <div class="modify-button center">수정하기</div>
         </a>`
@@ -483,7 +499,7 @@ app.get('/modify/:num', async (req, res) => {
     //오류 처리
     const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
     const seller = userResult[0]
-    if (!seller.num == req.session.num) {
+    if (seller.num !== req.session.num && !isAdmin(req)) {
         res.send(forcedMoveWithAlertCode('게시물을 수정할 수 있는 권한이 없습니다.', '/'))
         return
     }
@@ -516,6 +532,8 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     var title = body.title.replaceAll('<', '< ')
     var content = body.content.replaceAll('<', '< ')
 
+    const result = await sqlQuery(`select * from item where num=${req.params.num}`)
+
     var query = 'update item set '
     query += `title='${title}' , `
     query += `content='${content}' , `
@@ -524,7 +542,10 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     query += !Boolean(originalname) ? '' : `,imgName='${originalname}' `
     query += `where num=${req.params.num}`
     await sqlQuery(query)
-    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 수정하였습니다.`, `/item/${req.params.num}`)
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물이 수정되었습니다.`, `/item/${req.params.num}`)
+    if (isAdmin(req)) {
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 수정되었습니다.`, `/item/${req.params.num}`, result[0].seller_num)
+    }
     res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
 
@@ -545,12 +566,17 @@ app.get('/delete/:num', async (req, res) => {
         res.send(forcedMoveWithAlertCode('해당 게시물을 찾을 수 없습니다.', '/'))
         return
     }
-    if (result[0].seller_num != req.session.num) {
+    if (result[0].seller_num != req.session.num && !isAdmin(req)) {
         res.send(forcedMoveWithAlertCode('게시물을 수정할 수 있는 권한이 없습니다.', '/'))
         return
     }
 
+    var title = result[0].title
     await sqlQuery(`delete from item where num=${req.params.num}`)
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 삭제하였습니다.`, '')
+    if (isAdmin(req)) {
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 삭제되었습니다.`, '', result[0].seller_num)
+    }
     await res.send(forcedMoveCode(`/search?category=${result[0].category}`))
 })
 
