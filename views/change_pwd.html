@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서당</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+
+<body>
+    <div class="root">
+        <div class="header">
+            <div class="topbar-header">
+                <div class="gobackBtn">
+                    <a href="/home">
+                        <img src="/img/buttonIcon/arrow.png" class="arrowBtn" alt="">
+                    </a>
+                </div>
+                <div>로그인</div>
+            </div>
+            <div class="topbar-container">
+                <div class="topbar-logo"></div>
+            </div>
+            <div class="topbar-footer">
+                <a href="/alert">
+                    <div class="tool page-not-selected">
+                        <img class="nav-icon" src="/img/buttonIcon/{{alert_state}}.png" />
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="container">
+            <form action="/change-pwd-check" method="POST">
+                <div class="loginWrap center">
+                    <div class="logoWrap">서당</div>
+                    <div class="inputWrap">
+                        <div class="inputText">guest</div>
+                        <input class="inputText" id="pwInput" type="password" name="oldpw" placeholder="기존 비밀번호">
+                        <input class="inputText" id="pwInput" type="password" name="newpw" placeholder="새 비밀번호">
+                    </div>
+                    <div class="buttonWrap center">
+                        <input type="submit" class="cbutton" value="변경하기"></input>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="footer">
+            <div class="nav-item page-not-selected">
+                <a href="/home">
+                    <img class="nav-icon" src="/img/buttonIcon/home2.png" />
+                </a>
+            </div>
+            <div class="nav-item page-not-selected">
+                <a href="/write">
+                    <img class="nav-icon" src="/img/buttonIcon/write.png" />
+                </a>
+            </div>
+            <div class="nav-item page-selected">
+                <a href="/profile">
+                    <img class="nav-icon" src="/img/buttonIcon/user.png" />
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

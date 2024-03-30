@@ -232,10 +232,10 @@ function getCategoryForm(select) {
     return _HTML
 }
 
-function loginGuess(req) {
-    req.session.name = 'guess'
-    req.session.nickname = 'guess'
-    req.session.uid = 'guess'
+function loginGuest(req) {
+    req.session.name = 'guest'
+    req.session.nickname = 'guest'
+    req.session.uid = 'guest'
     req.session.num = 1
     req.session.isLogined = true
 }
@@ -300,7 +300,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/home', async (req, res) => {
-    //loginAdmin(req)
+    loginGuest(req)
     await sendRender(req, res, './views/home.html')
 })
 
@@ -604,5 +604,31 @@ app.get('/alert', async (req, res) => {
     })
     await sqlQuery(`update alert set isRead=1 where listener_num=${req.session.num} `)
 })
+
+app.get('/change-pwd', async (req, res) => {
+    await sendRender(req, res, './views/change_pwd.html', {
+        uid: req.query.uid == undefined ? '' : req.query.uid
+    })
+})
+
+app.post('/change-pwd-check', async (req, res) => {
+    if (!isLogined(req, res)) {
+        return
+    }
+    const body = req.body
+    const result = await sqlQuery(`select * from user where num=${req.session.num} and upw='${body.oldpw}'`)
+    try {
+        if (!result || !result.length || !body.oldpw || !body.newpw) {
+            res.send(forcedMoveWithAlertCode("비밀번호가 옳바르지 않습니다.", "/change-pwd"))
+            return
+        }
+    } catch {
+        res.send(forcedMoveWithAlertCode("비밀번호가 옳바르지 않습니다.", "/change-pwd"))
+        return
+    }
+    await sqlQuery(`update user set upw='${body.newpw}' where num=${req.session.num}`)
+    res.send(forcedMoveWithAlertCode('비밀번호가 변경되었습니다.', '/logout'))
+})
+
 
 app.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))
