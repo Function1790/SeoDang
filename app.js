@@ -195,25 +195,26 @@ function checkPost(req, res, path = 'write', isNotImg = false) {
     var title = body.title ? body.title : ''
     var content = body.price ? body.content : ''
     var category = body.category ? body.category : ''
+    var caller = body.caller ? body.caller : ''
     try {
         var price = body.price ? body.price : 0
         price = Number(price)
     } catch {
-        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
-        res.send(forcedMoveWithAlertCode("가격에서 오류가 났습니다.", link))
+        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
+        res.send(forcedMoveWithAlertCode("가격은 0 이상의 정수를 입력해주세요.", link))
         return false
     }
     try {
         const { originalname, filename, size } = req.file;
     } catch {
         if (!isNotImg) {
-            const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
+            const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
             res.send(forcedMoveWithAlertCode("파일을 선택해주세요.", link))
             return false
         }
     }
-    if (!body.title || !body.content || !body.category) {
-        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
+    if (!body.title || !body.content || !body.category || !body.caller) {
+        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
         res.send(forcedMoveWithAlertCode("입력란에 빈칸이 없어야 합니다.", link))
         return false
     } else if (price < 0) {
@@ -439,11 +440,13 @@ app.get('/write', async (req, res) => {
     var title = req.query.title ? req.query.title : ''
     var content = req.query.content ? req.query.content : ''
     var price = req.query.price ? req.query.price : ''
+    var caller = req.query.caller ? req.query.caller : ''
     await sendRender(req, res, './views/write.html', {
         title: title,
         content: content,
         price: price,
-        category: getCategoryForm(req.query.category)
+        category: getCategoryForm(req.query.category),
+        caller : caller
     })
 })
 
@@ -460,9 +463,10 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     price = Number(price)
     var title = body.title.replaceAll('<', '< ')
     var content = body.content.replaceAll('<', '< ')
+    var caller = body.caller
 
     var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName) '
-    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "010-0000-0000", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${originalname}");`
+    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${originalname}");`
     await sqlQuery(query)
     var lastIndex = await sqlQuery('select num from item order by num desc limit 1')
 
@@ -510,6 +514,7 @@ app.get('/modify/:num', async (req, res) => {
         content: _item.content,
         price: _item.price,
         imgName: _item.imgName,
+        caller: _item.contact,
         category: getCategoryForm(_item.category)
     })
 })
@@ -531,16 +536,18 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     price = Number(price)
     var title = body.title.replaceAll('<', '< ')
     var content = body.content.replaceAll('<', '< ')
-
+    var caller = body.caller.replaceAll('<', '< ')
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
 
     var query = 'update item set '
     query += `title='${title}' , `
     query += `content='${content}' , `
     query += `category='${body.category}' , `
-    query += `price=${price} `
+    query += `price=${price}, `
+    query += `contact='${caller}' `
     query += !Boolean(originalname) ? '' : `,imgName='${originalname}' `
     query += `where num=${req.params.num}`
+
     await sqlQuery(query)
     await sendAlert(req, `<span class="bold">${title}</span> 게시물이 수정되었습니다.`, `/item/${req.params.num}`)
     if (isAdmin(req)) {
