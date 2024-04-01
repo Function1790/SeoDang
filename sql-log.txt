@@ -30,7 +30,9 @@ insert into item (title, content, category, price, contact, post_time, isSelled,
 insert into item (title, content, category, price, contact, post_time, isSelled, seller, imgName) values ("블루투스 스피커요", "잘되긴하는데 중간에 끊겨요.", "korean", 1000, "010-0000-0000", "2024-03-27 09:04:30", 0, "guest", "2.jpg");
 insert into item (title, content, category, price, contact, post_time, isSelled, seller, imgName) values ("서령고 ㅈㅈ", "이제 버려요.", "math", 1000, "010-0000-0000", "2024-03-27 09:04:30", 0, "guest", "3.jpg");
 alter table item add file_type int;
-update item set seller_num=1 and file_type=0 ;
+alter table item add is_hidden tinyint;
+alter table item add is_buyed tinyint;
+update item set seller_num=1 and file_type=0 and is_buyed=0 and is_hidden=0;
 
 create table alert(
     num int not null auto_increment, 

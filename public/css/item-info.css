@@ -128,3 +128,18 @@
     align-items: center;
     justify-content: space-between;
 }
+
+.wrapButton {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: right;
+}
+
+.wrapButton > * {
+    margin-left: 10px;
+}
+
+.soldout {
+    background-color: #848484;
+}

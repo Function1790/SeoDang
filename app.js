@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/img/item/')
     },
-    filename: async(req, file, cb) => {
+    filename: async (req, file, cb) => {
         const randomID = uuid4();
         const ext = path.extname(file.originalname);
         const filename = randomID + ext;
@@ -82,6 +82,7 @@ const cookieConfig = {
     signed: true
 }
 
+//TP1
 //<----------Setting---------->
 const CategoryToKOR = {
     "korean": "국어",
@@ -116,6 +117,7 @@ const CategoryDetail = {
     ]
 }
 const COUNT_PER_PAGE = 20
+//TP2
 //<----------Function---------->
 const print = (data) => console.log(data)
 
@@ -322,6 +324,31 @@ async function sendAlert(req, content, link, listener_num = '') {
     await sqlQuery(query)
 }
 
+async function isWrongWithParam(req, res) {
+    const result = await sqlQuery(`select * from item where num=${req.params.num}`)
+    try {
+        Number(req.params.num)
+    } catch {
+        res.send(forcedMoveWithAlertCode('링크 형식이 잘못되었습니다.', '/'))
+        return true
+    }
+    try {
+        if (result.length === 0) {
+            res.send(forcedMoveWithAlertCode('해당 게시물을 찾을 수 없습니다.', '/'))
+            return true
+        }
+    } catch {
+        res.send(forcedMoveWithAlertCode('해당 게시물을 찾을 수 없습니다.', '/'))
+        return true
+    }
+    if (result[0].seller_num != req.session.num && !isAdmin(req)) {
+        res.send(forcedMoveWithAlertCode('게시물을 수정할 수 있는 권한이 없습니다.', '/'))
+        return true
+    }
+    return false
+}
+
+//TP3
 //<----------Server---------->
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -331,7 +358,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/home', async (req, res) => {
-    //loginGuest(req)
+    loginGuest(req)
     await sendRender(req, res, './views/home.html')
 })
 
@@ -411,11 +438,18 @@ app.get('/item/:num', async (req, res) => {
 
     var modifyHTML = ''
     if (req.session.num == _item.seller_num || isAdmin(req)) {
-        modifyHTML = `<a href="/modify/${_item.num}">
-            <div class="modify-button center">수정하기</div>
-        </a>`
+        modifyHTML = `
+        <div class='wrapButton'>
+            <a href="/soldout/${_item.num}">
+                <div class="modify-button center">거완처리</div>
+            </a>
+            <a href="/modify/${_item.num}">
+                <div class="modify-button center">수정하기</div>
+            </a>
+        </div>`
     }
-    var callerHTML = getCallerHTML(req, _item)
+    var callerHTML = _item.is_buyed ? '' : getCallerHTML(req, _item)
+    var callBtn = _item.is_buyed ? `<div class="callBtn soldout">거래완료</div>`:`<div class="callBtn">연락하기</div>`
     await sendRender(req, res, './views/item-info.html', {
         num: req.params.num,
         date: formatDatetime(new Date(_item.post_time)),
@@ -426,7 +460,8 @@ app.get('/item/:num', async (req, res) => {
         price: _item.price == 0 ? '무료' : toFormatMoney(_item.price) + '원',
         imgName: _item.imgName,
         modify: modifyHTML,
-        caller: callerHTML
+        caller: callerHTML,
+        callBtn: callBtn
     })
 })
 
@@ -594,26 +629,10 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
 })
 
 app.get('/delete/:num', async (req, res) => {
+    if (await isWrongWithParam(req, res)) {
+        return
+    }
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
-    try {
-        Number(req.params.num)
-    } catch {
-        res.send(forcedMoveWithAlertCode('링크 형식이 잘못되었습니다.', '/'))
-        return
-    }
-    try {
-        if (result.length === 0) {
-            res.send(forcedMoveWithAlertCode('해당 게시물을 찾을 수 없습니다.', '/'))
-            return
-        }
-    } catch {
-        res.send(forcedMoveWithAlertCode('해당 게시물을 찾을 수 없습니다.', '/'))
-        return
-    }
-    if (result[0].seller_num != req.session.num && !isAdmin(req)) {
-        res.send(forcedMoveWithAlertCode('게시물을 수정할 수 있는 권한이 없습니다.', '/'))
-        return
-    }
 
     var title = result[0].title
     await sqlQuery(`delete from item where num=${req.params.num}`)
@@ -621,7 +640,22 @@ app.get('/delete/:num', async (req, res) => {
     if (isAdmin(req)) {
         await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 삭제되었습니다.`, '', result[0].seller_num)
     }
-    await res.send(forcedMoveCode(`/search?category=${result[0].category}`))
+    res.send(forcedMoveCode(`/search?category=${result[0].category}`))
+})
+
+app.get('/soldout/:num', async (req, res) => {
+    if (await isWrongWithParam(req, res)) {
+        return
+    }
+    const result = await sqlQuery(`select * from item where num=${req.params.num}`)
+
+    var title = result[0].title
+    await sqlQuery(`update item set is_buyed=1 where num=${req.params.num}`)
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 판매처리 하였습니다.`, '')
+    if (isAdmin(req)) {
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 판매처리 되었습니다.`, '', result[0].seller_num)
+    }
+    res.send(forcedMoveCode(`/search?category=${result[0].category}`))
 })
 
 app.get('/alert', async (req, res) => {
