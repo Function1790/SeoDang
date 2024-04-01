@@ -2,4 +2,5 @@
 글자수 제한(비밀번호, 글쓰기)
 구매 처리
 어드민 보안
-modify 본인인증
+중복
+document.getElementsByClassName('wrapCaller')[0]

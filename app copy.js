@@ -7,7 +7,6 @@ const multer = require('multer');
 const http = require('http');
 const server = http.createServer(app);
 const io = require('socket.io')(server);
-const path = require('path')
 
 //Session
 const session = require('express-session')
@@ -21,16 +20,12 @@ app.use(express.static('public'))
 app.use('/views', express.static('views'))
 
 //Multer
-const uuid4 = require('uuid4');
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/img/item/')
     },
-    filename: async(req, file, cb) => {
-        const randomID = uuid4();
-        const ext = path.extname(file.originalname);
-        const filename = randomID + ext;
-        cb(null, filename)
+    filename: (req, file, cb) => {
+        cb(null, file.originalname)
     },
 })
 
@@ -95,26 +90,6 @@ const CategoryToENG = Object
     .entries(CategoryToKOR)
     .map(([key, value]) => [value, key])
 
-const CategoryDetail = {
-    "koraen": [
-        "국어", "문학", "독서", "화법과 작문", "언어와 매체", "심화 국어"
-    ],
-    "english": [
-        "영어", "영어I", "영어II", "영어 독해와 작문", "심화 영어"
-    ],
-    "math": [
-        "수학(상)", "수학(하)", "수학I", "수학II", "미적분", "확룰과 통계", "기하"
-    ],
-    "science": [
-        "통합과학", "화학I", "물리학I", "지구과학I", "생명과학I"
-    ],
-    "society": [
-        "통합사회"
-    ],
-    "etc": [
-        "정보"
-    ]
-}
 const COUNT_PER_PAGE = 20
 //<----------Function---------->
 const print = (data) => console.log(data)
@@ -163,7 +138,13 @@ async function renderFile(req, path, replaceItems = {}) {
 
 /** res.send(renderFile(...)) */
 async function sendRender(req, res, path, replaceItems = {}) {
-    res.send(await renderFile(req, path, replaceItems))
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    }).write(await renderFile(req, path, {
+        ...replaceItems,
+        test: 1
+    }))
+    //res.send(await renderFile(req, path, replaceItems))
 }
 
 function formatNum(value, len) {
@@ -331,7 +312,10 @@ app.get('/', (req, res) => {
 })
 
 app.get('/home', async (req, res) => {
-    //loginGuest(req)
+    //loginAdmin(req)
+    print(req.session.uid)
+    req.session.uid = 'admin'
+    print(req.session.uid)
     await sendRender(req, res, './views/home.html')
 })
 
@@ -496,15 +480,16 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     var caller = body.caller
 
     var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName) '
-    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${filename}");`
+    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${originalname}");`
     await sqlQuery(query)
     var lastIndex = await sqlQuery('select num from item order by num desc limit 1')
 
     await sendAlert(req, `<span class="bold">${title}</span> 게시물을 생성하였습니다.`, `/item/${lastIndex[0].num}`)
-    res.send(forcedMoveCode(`/search?category=${body.category}`))
+    await res.send(forcedMoveCode(`/search?category=${body.category}`))
 })
 
 app.get('/profile', async (req, res) => {
+    print(req.session.uid)
     if (!req.session.isLogined) {
         res.send(forcedMoveCode('/login'))
         return
@@ -568,21 +553,14 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     var content = body.content.replaceAll('<', '< ')
     var caller = body.caller.replaceAll('<', '< ')
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
-    const _item = result[0]
-    //오류 처리
-    const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
-    const seller = userResult[0]
-    if (seller.num !== req.session.num && !isAdmin(req)) {
-        res.send(forcedMoveWithAlertCode('게시물을 수정할 수 있는 권한이 없습니다.', '/'))
-        return
-    }
+
     var query = 'update item set '
     query += `title='${title}' , `
     query += `content='${content}' , `
     query += `category='${body.category}' , `
     query += `price=${price}, `
     query += `contact='${caller}' `
-    query += !Boolean(filename) ? '' : `,imgName='${filename}' `
+    query += !Boolean(originalname) ? '' : `,imgName='${originalname}' `
     query += `where num=${req.params.num}`
 
     await sqlQuery(query)
@@ -674,38 +652,33 @@ app.post('/change-pwd-check', async (req, res) => {
     res.send(forcedMoveWithAlertCode('비밀번호가 변경되었습니다.', '/logout'))
 })
 
+
 app.get('/chat', async (req, res) => {
-    const uid = req.session.uid
-    const to = req.query.to
-    await sendRender(req, res, './views/chat.html', {
-        uid: uid,
-        to: to
-    })
+    await sendRender(req, res, './views/chat.html')
 })
 
 io.sockets.on('connection', function (socket) {
-    socket.on('newUserConnect', function (data) {
-
-        socket.uid = data.uid
+    socket.on('newUserConnect', function (name) {
+        socket.name = name;
+        socket.id=
 
         io.sockets.emit('updateMessage', {
             name: 'SERVER',
-            message: socket.uid + '님이 접속했습니다.'
+            message: name + '님이 접속했습니다.'
         });
     });
 
     socket.on('disconnect', function () {
         io.sockets.emit('updateMessage', {
             name: 'SERVER',
-            message: socket.uid + '님이 퇴장했습니다.'
+            message: socket.name + '님이 퇴장했습니다.'
         });
     });
 
     socket.on('sendMessage', function (data) {
-        data.name = socket.uid;
+        data.name = socket.name;
         io.sockets.emit('updateMessage', data);
     });
 });
 
-
-server.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))
+app.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))

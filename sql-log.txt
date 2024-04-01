@@ -29,7 +29,8 @@ alter table item add seller_num int;
 insert into item (title, content, category, price, contact, post_time, isSelled, seller, imgName) values ("너구리 남는 제고 팝니다", "서령제하고 남은거 팔아요.", "korean", 1000, "010-0000-0000", "2024-03-27 09:04:30", 0, "guest", "1.jpg");
 insert into item (title, content, category, price, contact, post_time, isSelled, seller, imgName) values ("블루투스 스피커요", "잘되긴하는데 중간에 끊겨요.", "korean", 1000, "010-0000-0000", "2024-03-27 09:04:30", 0, "guest", "2.jpg");
 insert into item (title, content, category, price, contact, post_time, isSelled, seller, imgName) values ("서령고 ㅈㅈ", "이제 버려요.", "math", 1000, "010-0000-0000", "2024-03-27 09:04:30", 0, "guest", "3.jpg");
-update item set seller_num=1 ;
+alter table item add file_type int;
+update item set seller_num=1 and file_type=0 ;
 
 create table alert(
     num int not null auto_increment, 

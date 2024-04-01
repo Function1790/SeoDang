@@ -5,17 +5,21 @@ const closeBtn = document.getElementsByClassName('closeBtn')[0]
 const callBtn = document.getElementsByClassName('callBtn')[0]
 content.style.marginTop = `${bgimg.height}px`
 
-wrapCaller.style.display = 'none'
+try {
+    wrapCaller.style.display = 'none'
+} catch { }
 
 window.onscroll = (ev) => {
     var winY = window.scrollY;
     bgimg.style.opacity = 1 - (winY / bgimg.height)
 }
 //연락 on/off
-closeBtn.onclick = () => {
-    wrapCaller.style.display = 'none'
-}
+try {
+    closeBtn.onclick = () => {
+        wrapCaller.style.display = 'none'
+    }
 
-callBtn.onclick = () => {
-    wrapCaller.style.display = 'flex'
-}
+    callBtn.onclick = () => {
+        wrapCaller.style.display = 'flex'
+    }
+} catch { }
