@@ -14,22 +14,10 @@
 9.글 블라인더(관리자전용) 기능 추가
 10. 채팅기능 추가
 11. 구매자에 한해 1회 평가 가능(별점? 온도?)
-12. 행정실에 서버 문의(중요, 행정실에 문의)
-13. 관리자 문의, QnA 기능 추가
 
 alter된 row 조심하기
  and is_buyed!=0'
 max 갯수
 link SQLi
 
-MulterError: Unexpected field
-    at wrappedFileFilter (D:\Code\SeoryongGoDang\node_modules\multer\index.js:40:19)
-    at Multipart.<anonymous> (D:\Code\SeoryongGoDang\node_modules\multer\lib\make-middleware.js:107:7)
-    at Multipart.emit (node:events:519:28)
-    at HeaderParser.cb (D:\Code\SeoryongGoDang\node_modules\busboy\lib\types\multipart.js:358:14)
-    at HeaderParser.push (D:\Code\SeoryongGoDang\node_modules\busboy\lib\types\multipart.js:162:20)
-    at SBMH.ssCb [as _cb] (D:\Code\SeoryongGoDang\node_modules\busboy\lib\types\multipart.js:394:37)
-    at feed (D:\Code\SeoryongGoDang\node_modules\streamsearch\lib\sbmh.js:219:14)
-    at SBMH.push (D:\Code\SeoryongGoDang\node_modules\streamsearch\lib\sbmh.js:104:16)
-    at Multipart._write (D:\Code\SeoryongGoDang\node_modules\busboy\lib\types\multipart.js:567:19)
-    at writeOrBuffer (node:internal/streams/writable:564:12)
+파일 업로드 버그

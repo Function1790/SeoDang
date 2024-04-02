@@ -187,3 +187,26 @@ label {
 #chooseFile2 {
     display: none;
 }
+
+.fileSelectWrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+.filebox {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 5px;
+}
+
+.delete {
+    margin-right: 10px;
+    cursor: pointer;
+    user-select: none;
+}

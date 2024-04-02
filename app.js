@@ -34,7 +34,20 @@ const storage = multer.diskStorage({
     },
 })
 
+const storage2 = multer.diskStorage({
+    destination: (req, file, callback) => {
+        callback(null, 'public/file/item/')
+    },
+    filename: (req, file, callback) => {
+        const randomID = uuid4();
+        const ext = path.extname(file.originalname);
+        const filename = randomID + ext;
+        callback(null, filename)
+    }
+})
+
 const upload = multer({ storage })
+const upload2 = multer({ storage: storage2 })
 
 //Mysql
 const connection = mysql.createConnection({
@@ -145,6 +158,11 @@ function goBackWithAlertCode(text) {
     return `<script>alert("${text}");window.location.href = document.referrer</script>`
 }
 
+function goBackCode() {
+    return `<script>window.location.href = document.referrer</script>`
+}
+
+
 async function renderFile(req, path, replaceItems = {}) {
     var content = await readFile(path)
 
@@ -213,6 +231,13 @@ function isExistKeyword(text, keywords) {
     return true
 }
 
+function isFileList(imgName) {
+    if (imgName[0] == '[') {
+        return true
+    }
+    return false
+}
+
 /** !isLogined = 로그인 X -> res.send */
 function isLogined(req, res) {
     if (req.session.uid == undefined) {
@@ -239,7 +264,7 @@ function checkPost(req, res, path = 'write', isNotImg = false) {
     try {
         const { originalname, filename, size } = req.file;
     } catch {
-        if (!isNotImg) {
+        if (!isNotImg && req.files == undefined) {
             const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
             res.send(forcedMoveWithAlertCode("파일을 선택해주세요.", link))
             return false
@@ -324,6 +349,18 @@ async function sendAlert(req, content, link, listener_num = '') {
     await sqlQuery(query)
 }
 
+function toShort(text, length) {
+    var result = ''
+    for (var i in text) {
+        if (length - 3 <= i) {
+            result += '...'
+            break
+        }
+        result += text[i]
+    }
+    return result
+}
+
 async function isWrongWithParam(req, res) {
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
     try {
@@ -368,7 +405,7 @@ app.get('/search', async (req, res) => {
     const _cate = req.query.category ? req.query.category.toString() : ''
     const _page_index = toNumber(req.query.page)
     const _page = _page_index * COUNT_PER_PAGE
-    var _condition =req.query.creator ? ' where 1=1':  ` where is_buyed=0`
+    var _condition = req.query.creator ? ' where 1=1' : ` where is_buyed=0`
     _condition += _cate ? ` and category='${_cate}'` : ''
     if (_condition) {
         _condition += req.query.creator ? ` and seller='${req.query.creator}'` : ''
@@ -452,6 +489,23 @@ app.get('/item/:num', async (req, res) => {
             </a>
         </div>`
     }
+    var imgHTML = `<img src="/img/item/${_item.imgName}" class="main-photo">`
+    var filesHTML = ''
+    if (_item.is_file) {
+        imgHTML = ''
+        var names = JSON.parse(_item.imgName)
+        for (var i in names) {
+            filesHTML += `
+            <a href='/download?name=${names[i]}' target='_blank'>
+                <div class='file-block'>
+                    <div class='file-title'>파일${Number(i) + 1}</div>
+                    <div class='file-content center'>${toShort(names[i], 10)}</div>
+                </div>
+            </a>
+            `
+        }
+    }
+    filesHTML = `<div class="filesWrap">${filesHTML}</div>`
     var callerHTML = _item.is_buyed ? '' : getCallerHTML(req, _item)
     await sendRender(req, res, './views/item-info.html', {
         num: req.params.num,
@@ -461,12 +515,24 @@ app.get('/item/:num', async (req, res) => {
         category: "#" + CategoryToKOR[_item.category],
         category_eng: _item.category,
         price: _item.price == 0 ? '무료' : toFormatMoney(_item.price) + '원',
-        imgName: _item.imgName,
         modify: modifyHTML,
         caller: isSeller ? '' : callerHTML,
-        callBtn: callBtn
+        callBtn: callBtn,
+        imgHTML: imgHTML,
+        files: filesHTML
     })
 })
+
+app.get('/download', (req, res, next) => {
+    const filename = req.query.name
+    const fileroute = __dirname + `/public/file/item/${filename}`
+    if (fs.existsSync(fileroute)) {
+        res.setHeader('Content-Disposition', `attachment; filename=${filename}`) // 이게 핵심 
+        res.sendFile(__dirname + `/public/file/item/${filename}`)
+        return
+    }
+    res.send('해당 파일이 없습니다.')
+});
 
 
 app.get('/login', async (req, res) => {
@@ -525,6 +591,7 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     if (!checkPost(req, res)) {
         return
     }
+    print(req.files)
     const body = req.body
     const { originalname, filename, size } = req.file;
     var price = body.price ? body.price : 0
@@ -533,8 +600,8 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     var content = body.content.replaceAll('<', '< ')
     var caller = body.caller
 
-    var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName) '
-    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${filename}");`
+    var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName, is_buyed, is_hidden, is_file) '
+    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${filename}", 0, 0, 1);`
     await sqlQuery(query)
     var lastIndex = await sqlQuery('select num from item order by num desc limit 1')
 
@@ -542,10 +609,39 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     res.send(forcedMoveCode(`/search?category=${body.category}`))
 })
 
-app.get('/view-profile', async (req, res)=>{
+app.post('/write-check2', upload2.array('itemFile'), async (req, res) => {
+    if (!isLogined(req, res)) {
+        return
+    }
+    if (!checkPost(req, res)) {
+        return
+    }
+    const body = req.body
+    var price = body.price ? body.price : 0
+    price = Number(price)
+    var title = body.title.replaceAll('<', '< ')
+    var content = body.content.replaceAll('<', '< ')
+    var caller = body.caller
+
+    var _names = []
+    for (var i in req.files) {
+        _names.push(req.files[i].filename)
+    }
+    var _names = JSON.stringify(_names)
+
+    var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName, is_buyed, is_hidden,is_file) '
+    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, '${_names}', 0, 0, 1);`
+    await sqlQuery(query)
+    var lastIndex = await sqlQuery('select num from item order by num desc limit 1')
+
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 생성하였습니다.`, `/item/${lastIndex[0].num}`)
+    res.send(forcedMoveCode(`/search?category=${body.category}`))
+})
+
+app.get('/view-profile', async (req, res) => {
     const result = await sqlQuery(`select * from user where uid='${req.query.uid}'`)
 
-    if(!result){
+    if (!result) {
         await sendRender(req, res, './views/error.html')
         return
     }

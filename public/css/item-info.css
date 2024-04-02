@@ -71,7 +71,7 @@
     justify-content: center;
     align-items: center;
     background-color: #f89e37;
-    color:white
+    color: white
 }
 
 .wrapCaller {
@@ -108,7 +108,7 @@
     height: 35px;
     font-size: 20px;
     font-weight: 500;
-} 
+}
 
 .caller-container {
     flex: 1;
@@ -136,10 +136,28 @@
     justify-content: right;
 }
 
-.wrapButton > * {
+.wrapButton>* {
     margin-left: 10px;
 }
 
 .soldout {
     background-color: #848484;
+}
+
+.filesWrap {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 15px;
+}
+
+.file-block{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    border: 2px solid #aaa;
+    width: 100px;
+    padding: 5px 25px;
+    margin: 5px;
+    cursor: pointer;
 }
