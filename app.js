@@ -368,11 +368,12 @@ app.get('/search', async (req, res) => {
     const _cate = req.query.category ? req.query.category.toString() : ''
     const _page_index = toNumber(req.query.page)
     const _page = _page_index * COUNT_PER_PAGE
-    var _condition = _cate ? ` where category='${_cate}'` : ''
+    var _condition =req.query.creator ? ' where 1=1':  ` where is_buyed=0`
+    _condition += _cate ? ` and category='${_cate}'` : ''
     if (_condition) {
         _condition += req.query.creator ? ` and seller='${req.query.creator}'` : ''
     } else {
-        _condition += req.query.creator ? ` where seller='${req.query.creator}'` : ''
+        _condition += req.query.creator ? ` seller='${req.query.creator}'` : ''
     }
     const result = await sqlQuery('select * from item' + _condition + ` order by num desc limit ${_page}, ${COUNT_PER_PAGE}`)
     var max_page = await sqlQuery('select count(num) from item' + _condition)
@@ -435,21 +436,23 @@ app.get('/item/:num', async (req, res) => {
     //오류 처리
     const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
     const seller = userResult[0]
+    var callBtn = _item.is_buyed ? `<div class="callBtn soldout">거래완료</div>` : `<div class="callBtn">연락하기</div>`
 
+    const isSeller = req.session.num == _item.seller_num
     var modifyHTML = ''
-    if (req.session.num == _item.seller_num || isAdmin(req)) {
+    if (isSeller || isAdmin(req)) {
+
+        callBtn = _item.is_buyed ? `
+        <a class="callBtn soldout"><div >종료취소</div></a>
+        ` : `<a class="callBtn" href="/soldout/${_item.num}"><div >거래종료</div></a>`
         modifyHTML = `
         <div class='wrapButton'>
-            <a href="/soldout/${_item.num}">
-                <div class="modify-button center">거완처리</div>
-            </a>
             <a href="/modify/${_item.num}">
                 <div class="modify-button center">수정하기</div>
             </a>
         </div>`
     }
     var callerHTML = _item.is_buyed ? '' : getCallerHTML(req, _item)
-    var callBtn = _item.is_buyed ? `<div class="callBtn soldout">거래완료</div>`:`<div class="callBtn">연락하기</div>`
     await sendRender(req, res, './views/item-info.html', {
         num: req.params.num,
         date: formatDatetime(new Date(_item.post_time)),
@@ -460,7 +463,7 @@ app.get('/item/:num', async (req, res) => {
         price: _item.price == 0 ? '무료' : toFormatMoney(_item.price) + '원',
         imgName: _item.imgName,
         modify: modifyHTML,
-        caller: callerHTML,
+        caller: isSeller ? '' : callerHTML,
         callBtn: callBtn
     })
 })
@@ -537,6 +540,20 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
 
     await sendAlert(req, `<span class="bold">${title}</span> 게시물을 생성하였습니다.`, `/item/${lastIndex[0].num}`)
     res.send(forcedMoveCode(`/search?category=${body.category}`))
+})
+
+app.get('/view-profile', async (req, res)=>{
+    const result = await sqlQuery(`select * from user where uid='${req.query.uid}'`)
+
+    if(!result){
+        await sendRender(req, res, './views/error.html')
+        return
+    }
+    await sendRender(req, res, './views/profile.html', {
+        nickname: result[0].nickname,
+        uid: result[0].uid,
+        schoolid: result[0].schoolid
+    })
 })
 
 app.get('/profile', async (req, res) => {
@@ -651,11 +668,11 @@ app.get('/soldout/:num', async (req, res) => {
 
     var title = result[0].title
     await sqlQuery(`update item set is_buyed=1 where num=${req.params.num}`)
-    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 판매처리 하였습니다.`, '')
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 거래종료 하였습니다.`, '')
     if (isAdmin(req)) {
-        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 판매처리 되었습니다.`, '', result[0].seller_num)
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 거래종료 되었습니다.`, '', result[0].seller_num)
     }
-    res.send(forcedMoveCode(`/search?category=${result[0].category}`))
+    res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
 
 app.get('/alert', async (req, res) => {
