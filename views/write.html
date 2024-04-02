@@ -39,7 +39,8 @@
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">설명</div>
-                    <textarea class="input input-long" id="content" type="text" name="content" value="">{{content}}</textarea>
+                    <textarea class="input input-long" id="content" type="text" name="content"
+                        value="">{{content}}</textarea>
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">과목</div>
@@ -51,7 +52,10 @@
                     </div>
                 </div>
                 <div class="inputWrap imgInputWrap">
-                    <div class="inputLabel">사진</div>
+                    <div class="select2Wrap">
+                        <div class="inputLabel selectBtn selected" id="selectImg">사진</div>
+                        <div class="inputLabel selectBtn" id="selectFile">파일</div>
+                    </div>
                     <div class="imgSelectWrap">
                         <label for="chooseFile">
                             <div class="imgSelectBtn center">
@@ -62,38 +66,45 @@
                             <img src="" id="itemImg">
                         </div>
                     </div>
-                    <input type="file" id="chooseFile" name="itemImg" accept="image/*, .txt">
+                    <div class="fileSelectWrap">
+                        <label for="chooseFile2">파일선택</label>
+                    </div>
+                    <input type="file" id="chooseFile" name="itemImg" accept="image/*">
+                    <input type="file" id="chooseFile2" name="itemFile" accept=".txt, .hwp, .t">
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">가격</div>
-                    <input class="input" id="price" type="number" name="price" placeholder="가격" min='0' step='1' value="{{price}}">
+                    <input class="input" id="price" type="number" name="price" placeholder="가격" min='0' step='1'
+                        value="{{price}}">
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">연락 방법</div>
-                    <input class="input" type="text" name="caller" placeholder="연락 방법" min='0' step='1' value="{{caller}}">
+                    <input class="input" type="text" name="caller" placeholder="연락 방법" min='0' step='1'
+                        value="{{caller}}">
                 </div>
                 <div class="confirmWrap center">
-                    <input type="submit" class="confirmBtn center" value="게시하기"></div>
+                    <input type="submit" class="confirmBtn center" value="게시하기">
                 </div>
-            </form>
         </div>
-        <div class="footer">
-            <div class="nav-item page-not-selected">
-                <a href="/home">
-                    <img class="nav-icon" src="/img/buttonIcon/home2.png" />
-                </a>
-            </div>
-            <div class="nav-item page-selected">
-                <a href="/write">
-                    <img class="nav-icon" src="/img/buttonIcon/write.png" />
-                </a>
-            </div>
-            <div class="nav-item page-not-selected">
-                <a href="/profile">
-                    <img class="nav-icon" src="/img/buttonIcon/user.png" />
-                </a>
-            </div>
+        </form>
+    </div>
+    <div class="footer">
+        <div class="nav-item page-not-selected">
+            <a href="/home">
+                <img class="nav-icon" src="/img/buttonIcon/home2.png" />
+            </a>
         </div>
+        <div class="nav-item page-selected">
+            <a href="/write">
+                <img class="nav-icon" src="/img/buttonIcon/write.png" />
+            </a>
+        </div>
+        <div class="nav-item page-not-selected">
+            <a href="/profile">
+                <img class="nav-icon" src="/img/buttonIcon/user.png" />
+            </a>
+        </div>
+    </div>
     </div>
     <script src="/src/write.js"></script>
 </body>

@@ -21,3 +21,15 @@ alter된 row 조심하기
  and is_buyed!=0'
 max 갯수
 link SQLi
+
+MulterError: Unexpected field
+    at wrappedFileFilter (D:\Code\SeoryongGoDang\node_modules\multer\index.js:40:19)
+    at Multipart.<anonymous> (D:\Code\SeoryongGoDang\node_modules\multer\lib\make-middleware.js:107:7)
+    at Multipart.emit (node:events:519:28)
+    at HeaderParser.cb (D:\Code\SeoryongGoDang\node_modules\busboy\lib\types\multipart.js:358:14)
+    at HeaderParser.push (D:\Code\SeoryongGoDang\node_modules\busboy\lib\types\multipart.js:162:20)
+    at SBMH.ssCb [as _cb] (D:\Code\SeoryongGoDang\node_modules\busboy\lib\types\multipart.js:394:37)
+    at feed (D:\Code\SeoryongGoDang\node_modules\streamsearch\lib\sbmh.js:219:14)
+    at SBMH.push (D:\Code\SeoryongGoDang\node_modules\streamsearch\lib\sbmh.js:104:16)
+    at Multipart._write (D:\Code\SeoryongGoDang\node_modules\busboy\lib\types\multipart.js:567:19)
+    at writeOrBuffer (node:internal/streams/writable:564:12)
