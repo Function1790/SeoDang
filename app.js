@@ -270,7 +270,8 @@ function checkPost(req, res, path = 'write', isNotImg = false) {
             return false
         }
     }
-    if (!body.title || !body.content || !body.category || !body.caller) {
+
+    if (!body.title || !body.content || !body.category) {
         const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
         res.send(forcedMoveWithAlertCode("입력란에 빈칸이 없어야 합니다.", link))
         return false
@@ -424,11 +425,12 @@ app.get('/search', async (req, res) => {
                 continue
             }
         }
+        var imgSrc = result[i].is_file ? '/img/icon/carrot.png' : `/img/item/${result[i].imgName}`
         itemsHTML += `
         <a href="/item/${result[i].num}">
             <div class="item">
                 <div class="item-header center">
-                    <div class="item-imgWrap"><img src="/img/item/${result[i].imgName}"/></div>
+                    <div class="item-imgWrap"><img src="${imgSrc}"/></div>
                 </div>
                 <div class="item-container">
                     <div class="item-title">${result[i].title}</div>
@@ -507,12 +509,13 @@ app.get('/item/:num', async (req, res) => {
     }
     filesHTML = `<div class="filesWrap">${filesHTML}</div>`
     var callerHTML = _item.is_buyed ? '' : getCallerHTML(req, _item)
+    var hashtag = `#${CategoryToKOR[_item.category]} #${_item.is_file ? '파일' : '이미지'}`
     await sendRender(req, res, './views/item-info.html', {
         num: req.params.num,
         date: formatDatetime(new Date(_item.post_time)),
         title: _item.title,
         content: _item.content,
-        category: "#" + CategoryToKOR[_item.category],
+        category: hashtag,
         category_eng: _item.category,
         price: _item.price == 0 ? '무료' : toFormatMoney(_item.price) + '원',
         modify: modifyHTML,
@@ -591,7 +594,6 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     if (!checkPost(req, res)) {
         return
     }
-    print(req.files)
     const body = req.body
     const { originalname, filename, size } = req.file;
     var price = body.price ? body.price : 0
@@ -601,7 +603,7 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     var caller = body.caller
 
     var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName, is_buyed, is_hidden, is_file) '
-    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${filename}", 0, 0, 1);`
+    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${filename}", 0, 0, 0);`
     await sqlQuery(query)
     var lastIndex = await sqlQuery('select num from item order by num desc limit 1')
 
@@ -685,6 +687,16 @@ app.get('/modify/:num', async (req, res) => {
         res.send(forcedMoveWithAlertCode('게시물을 수정할 수 있는 권한이 없습니다.', '/'))
         return
     }
+    var filestate = 'img'
+    var filesHTML = ''
+    if (_item.is_file) {
+        filestate = 'file'
+        imgHTML = ''
+        var files = JSON.parse(_item.imgName)
+        for (var i in files) {
+            filesHTML += `<div id="file${i}" class="filebox"><p class="name">${toShort(files[i], 15)}</p></div>`
+        }
+    }
     await sendRender(req, res, './views/modify.html', {
         num: req.params.num,
         date: formatDatetime(new Date(_item.post_time)),
@@ -693,7 +705,9 @@ app.get('/modify/:num', async (req, res) => {
         price: _item.price,
         imgName: _item.imgName,
         caller: _item.contact,
-        category: getCategoryForm(_item.category)
+        category: getCategoryForm(_item.category),
+        files: filesHTML,
+        state: filestate
     })
 })
 
@@ -740,6 +754,50 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     }
     res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
+
+app.post('/modify-check2/:num', upload2.array('itemFile'), async (req, res) => {
+    if (!isLogined(req, res)) {
+        return
+    }
+    if (!checkPost(req, res, `modify/${req.query.params}`, true)) {
+        return
+    }
+    const body = req.body
+    var _names = []
+    for (var i in req.files) {
+        _names.push(req.files[i].filename)
+    }
+    var _names_str = JSON.stringify(_names)
+    var price = body.price ? body.price : 0
+    price = Number(price)
+    var title = body.title.replaceAll('<', '< ')
+    var content = body.content.replaceAll('<', '< ')
+    var caller = body.caller.replaceAll('<', '< ')
+    const result = await sqlQuery(`select * from item where num=${req.params.num}`)
+    const _item = result[0]
+    //오류 처리
+    const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
+    const seller = userResult[0]
+    if (seller.num !== req.session.num && !isAdmin(req)) {
+        res.send(forcedMoveWithAlertCode('게시물을 수정할 수 있는 권한이 없습니다.', '/'))
+        return
+    }
+    var query = 'update item set '
+    query += `title='${title}' , `
+    query += `content='${content}' , `
+    query += `category='${body.category}' , `
+    query += `price=${price}, `
+    query += `contact='${caller}' `
+    query += _names.length == 0 ? '' : `,imgName='${_names_str}' `
+    query += `where num=${req.params.num}`
+    await sqlQuery(query)
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물이 수정되었습니다.`, `/item/${req.params.num}`)
+    if (isAdmin(req)) {
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 수정되었습니다.`, `/item/${req.params.num}`, result[0].seller_num)
+    }
+    res.send(forcedMoveCode(`/item/${req.params.num}`))
+})
+
 
 app.get('/delete/:num', async (req, res) => {
     if (await isWrongWithParam(req, res)) {

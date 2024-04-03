@@ -49,6 +49,7 @@ const fileInput = getByID('chooseFile2')
 const form = getByID('form')
 const selectBtn = 'inputLabel selectBtn '
 var isImg = true
+const stateValueNum = getByID("state-num").innerText
 
 function setStateImg() {
     selectImg.className = selectBtn + 'selected'
@@ -58,7 +59,7 @@ function setStateImg() {
     imgInput.disabled = false
     fileInput.disabled = true
     isImg = true
-    form.action = '/write-check'
+    form.action = `/modify-check/${stateValueNum}`
 }
 
 function setStateFile() {
@@ -69,7 +70,7 @@ function setStateFile() {
     imgInput.disabled = true
     fileInput.disabled = false
     isImg = false
-    form.action = '/write-check2'
+    form.action = `/modify-check2/${stateValueNum}`
 }
 
 //초기 상태

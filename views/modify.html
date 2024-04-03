@@ -32,7 +32,7 @@
             </div>
         </div>
         <div class="container">
-            <form action="/modify-check/{{num}}" method="post" enctype="multipart/form-data">
+            <form action="/modify-check/{{num}}" id="form" method="post" enctype="multipart/form-data">
                 <div class="inputWrap">
                     <div class="inputLabel">제목</div>
                     <input class="input" id="title" type="text" name="title" placeholder="제목" value="{{title}}">
@@ -52,7 +52,10 @@
                     </div>
                 </div>
                 <div class="inputWrap imgInputWrap">
-                    <div class="inputLabel">사진</div>
+                    <div class="select2Wrap">
+                        <div class="inputLabel selectBtn selected" id="selectImg">사진</div>
+                        <div class="inputLabel selectBtn" id="selectFile">파일</div>
+                    </div>
                     <div class="imgSelectWrap">
                         <label for="chooseFile">
                             <div class="imgSelectBtn center">
@@ -60,10 +63,19 @@
                             </div>
                         </label>
                         <div class="imgSelected center">
-                            <img src="/img/item/{{imgName}}" id="itemImg">
+                            <img src="" id="itemImg">
+                        </div>
+                    </div>
+                    <div class="fileSelectWrap">
+                        <label for="chooseFile2">파일선택</label>
+                        <div class="file-list-wrap">
+                            <div class="file-list">
+                                {{files}}
+                            </div>
                         </div>
                     </div>
                     <input type="file" id="chooseFile" name="itemImg" accept="image/*">
+                    <input type="file" id="chooseFile2" name="itemFile" accept=".txt, .hwp, .t" multiple>
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">가격</div>
@@ -72,7 +84,8 @@
                 </div>
                 <div class="inputWrap">
                     <div class="inputLabel">연락 방법</div>
-                    <input class="input" type="text" name="caller" placeholder="연락 방법" min='0' step='1' value="{{caller}}">
+                    <input class="input" type="text" name="caller" placeholder="연락 방법" min='0' step='1'
+                        value="{{caller}}">
                 </div>
                 <div class="confirmWrap center">
                     <input type="submit" class="confirmBtn" value="저장하기">
@@ -100,7 +113,10 @@
             </div>
         </div>
     </div>
-    <script src="/src/write.js"></script>
+    <div style="display: none;" id="state-input">{{state}}</div>
+    <div style="display: none;" id="state-num">{{num}}</div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="/src/modify.js"></script>
 </body>
 
 </html>

@@ -21,3 +21,4 @@ max 갯수
 link SQLi
 
 파일 업로드 버그
+modify시 기존 파일
