@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서당</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/manage.css">
+</head>
+
+<body>
+    <div class="root">
+        <div class="header">
+            <div class="topbar-header">
+                <div>관리자 페이지</div>
+            </div>
+            <div class="topbar-container">
+                <div class="topbar-logo"></div>
+            </div>
+            <div class="topbar-footer">
+                <a href="/alert">
+                    <div class="tool page-not-selected">
+                        <img class="nav-icon" src="/img/buttonIcon/{{alert_state}}.png" />
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="container">
+            <div class="content-wrap">
+                <!--비밀번호 바꾸기-->
+                <!--비활성 글-->
+                <div class="link-wrap">
+                    <a href="/manage/hiddencontent">가려진 글 보기</a>
+                </div>
+                <!--거래된 글-->
+                <div class="link-wrap">
+                    <a href="/manage/soldcontent">거래된 글 보기</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div class="nav-item page-not-selected">
+                <a href="/home">
+                    <img class="nav-icon" src="/img/buttonIcon/home2.png" />
+                </a>
+            </div>
+            <div class="nav-item page-selected">
+                <a href="/write">
+                    <img class="nav-icon" src="/img/buttonIcon/write.png" />
+                </a>
+            </div>
+            <div class="nav-item page-not-selected">
+                <a href="/profile">
+                    <img class="nav-icon" src="/img/buttonIcon/user.png" />
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

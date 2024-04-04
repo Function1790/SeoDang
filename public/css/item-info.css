@@ -147,6 +147,7 @@
 .filesWrap {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     margin-bottom: 15px;
 }
 
@@ -156,7 +157,8 @@
     align-items: center;
     flex-direction: column;
     border: 2px solid #aaa;
-    width: 100px;
+    width: 140px;
+    height: 70px;
     padding: 5px 25px;
     margin: 5px;
     cursor: pointer;

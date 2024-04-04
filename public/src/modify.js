@@ -87,6 +87,10 @@ selectFile.onclick = () => {
 
 var fileNo = 0;
 var filesArr = new Array();
+var fileboxes = getByClass('filebox')
+for(var i=0; i<fileboxes.length; i++){
+    filesArr.push(i)
+}
 
 /* 첨부파일 추가 */
 fileInput.onchange = () => {

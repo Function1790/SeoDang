@@ -178,7 +178,7 @@ async function renderFile(req, path, replaceItems = {}) {
     for (i in replaceItems) {
         content = content.replaceAll(`{{${i}}}`, replaceItems[i])
     }
-    return content
+    return '<link rel="icon" href="/img/icon/logo.jpg"/>' + content
 }
 
 /** res.send(renderFile(...)) */
@@ -250,7 +250,7 @@ function isLogined(req, res) {
 function checkPost(req, res, path = 'write', isNotImg = false) {
     const body = req.body
     var title = body.title ? body.title : ''
-    var content = body.price ? body.content : ''
+    var content = body.content ? body.content : ''
     var category = body.category ? body.category : ''
     var caller = body.caller ? body.caller : ''
     try {
@@ -278,6 +278,11 @@ function checkPost(req, res, path = 'write', isNotImg = false) {
     } else if (price < 0) {
         const link = `/${path}?title=${title}&content=${content}&price=${price}`
         res.send(forcedMoveWithAlertCode("가격은 음수가 아니여야합니다.", link))
+        return false
+    }
+    if (body.title.length < 5) {
+        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
+        res.send(forcedMoveWithAlertCode("제목의 길이는 5글자 이하여야 합니다.", link))
         return false
     }
     return true
@@ -359,6 +364,9 @@ function toShort(text, length) {
         }
         result += text[i]
     }
+    for (var i = text.length - 6; i < text.length; i++) {
+        result += text[i]
+    }
     return result
 }
 
@@ -396,7 +404,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/home', async (req, res) => {
-    loginGuest(req)
+    loginAdmin(req)
     await sendRender(req, res, './views/home.html')
 })
 
@@ -406,7 +414,7 @@ app.get('/search', async (req, res) => {
     const _cate = req.query.category ? req.query.category.toString() : ''
     const _page_index = toNumber(req.query.page)
     const _page = _page_index * COUNT_PER_PAGE
-    var _condition = req.query.creator ? ' where 1=1' : ` where is_buyed=0`
+    var _condition = req.query.creator ? ' where 1=1' : ` where is_buyed=0 and is_hidden=0`
     _condition += _cate ? ` and category='${_cate}'` : ''
     if (_condition) {
         _condition += req.query.creator ? ` and seller='${req.query.creator}'` : ''
@@ -583,7 +591,7 @@ app.get('/write', async (req, res) => {
         content: content,
         price: price,
         category: getCategoryForm(req.query.category),
-        caller: caller
+        caller: caller,
     })
 })
 
@@ -694,9 +702,12 @@ app.get('/modify/:num', async (req, res) => {
         imgHTML = ''
         var files = JSON.parse(_item.imgName)
         for (var i in files) {
-            filesHTML += `<div id="file${i}" class="filebox"><p class="name">${toShort(files[i], 15)}</p></div>`
+            filesHTML += `<div id="file${i}" class="filebox"><p class="name">${toShort(files[i], 10)}</p></div>`
         }
     }
+    var hideBtn = isAdmin(req) ? `<a href="/hide/{{num}}">
+                                        <div class="confirmBtn center">가리기</div>
+                                    </a>`: ''
     await sendRender(req, res, './views/modify.html', {
         num: req.params.num,
         date: formatDatetime(new Date(_item.post_time)),
@@ -707,7 +718,8 @@ app.get('/modify/:num', async (req, res) => {
         caller: _item.contact,
         category: getCategoryForm(_item.category),
         files: filesHTML,
-        state: filestate
+        state: filestate,
+        hideBtn: hideBtn
     })
 })
 
@@ -814,6 +826,21 @@ app.get('/delete/:num', async (req, res) => {
     res.send(forcedMoveCode(`/search?category=${result[0].category}`))
 })
 
+app.get('/hide/:num', async (req, res) => {
+    if (await isWrongWithParam(req, res)) {
+        return
+    }
+    const result = await sqlQuery(`select * from item where num=${req.params.num}`)
+
+    var title = result[0].title
+    await sqlQuery(`update item set  where num=${req.params.num}`)
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 가렸습니다.`, '')
+    if (isAdmin(req)) {
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 삭제되었습니다.`, '', result[0].seller_num)
+    }
+    res.send(forcedMoveCode(`/search?category=${result[0].category}`))
+})
+
 app.get('/soldout/:num', async (req, res) => {
     if (await isWrongWithParam(req, res)) {
         return
@@ -888,6 +915,141 @@ app.get('/chat', async (req, res) => {
     })
 })
 
+app.get('/manage', async (req, res) => {
+    await sendRender(req, res, './views/manage.html', {
+
+    })
+})
+
+app.get('/manage/soldcontent', async (req, res) => {
+    if(isAdmin(req)){
+        res.send(forcedMoveWithAlertCode('권한이 적합하지 않습니다.', '/home'))
+        return
+    }
+    const _find = req.query.data ? req.query.data.split(" ") : ''
+    const _cate = req.query.category ? req.query.category.toString() : ''
+    const _page_index = toNumber(req.query.page)
+    const _page = _page_index * COUNT_PER_PAGE
+    var _condition = ` where is_buyed=1 and is_hidden=0`
+    _condition += _cate ? ` and category='${_cate}'` : ''
+    if (_condition) {
+        _condition += req.query.creator ? ` and seller='${req.query.creator}'` : ''
+    } else {
+        _condition += req.query.creator ? ` seller='${req.query.creator}'` : ''
+    }
+    const result = await sqlQuery('select * from item' + _condition + ` order by num desc limit ${_page}, ${COUNT_PER_PAGE}`)
+    var max_page = await sqlQuery('select count(num) from item' + _condition)
+    max_page = Math.ceil(toNumber(max_page[0]['count(num)']) / COUNT_PER_PAGE)
+    var itemsHTML = ''
+    for (var i in result) {
+        if (_find) {
+            var isInTitle = isExistKeyword(result[i].title, _find)
+            var isInContent = isExistKeyword(result[i].content, _find)
+            if (!isInTitle && !isInContent) {
+                continue
+            }
+        }
+        var imgSrc = result[i].is_file ? '/img/icon/carrot.png' : `/img/item/${result[i].imgName}`
+        itemsHTML += `
+        <a href="/item/${result[i].num}">
+            <div class="item">
+                <div class="item-header center">
+                    <div class="item-imgWrap"><img src="${imgSrc}"/></div>
+                </div>
+                <div class="item-container">
+                    <div class="item-title">${result[i].title}</div>
+                    <div class="item-description">${result[i].seller}</div>
+                    <div class="item-price">${result[i].price == 0 ? '무료' : toFormatMoney(result[i].price) + '원'}</div>
+                </div>
+            </div>
+        </a>
+    `
+    }
+
+    var url = `/search?data=${_find}&category=${_cate}&page=`
+    var backHTML = '<div class="pageBtn center dontgo">←</div>'
+    var nextHTML = '<div class="pageBtn center dontgo">→</div>'
+    if (_page_index > 0) {
+        backHTML = `<a href='${url}${_page_index - 1}'><div class="pageBtn center">←</div></a>`
+    }
+    if (_page_index < max_page - 1) {
+        nextHTML = `<a href='${url}${_page_index + 1}'><div class="pageBtn center">→</div></a>`
+    }
+    await sendRender(req, res, './views/admincontent.html', {
+        items: itemsHTML ? itemsHTML : "<div class='notFound'>게시물을 찾을 수 없습니다.</div>",
+        category: _find ? "검색" : (req.query.category == undefined ? '거래' : CategoryToKOR[req.query.category]),
+        pageNum: _page_index + 1,
+        gotoBack: backHTML,
+        gotoNext: nextHTML,
+        link:'soldcontent'
+    })
+})
+
+app.get('/manage/hiddencontent', async (req, res) => {
+    if(isAdmin(req)){
+        res.send(forcedMoveWithAlertCode('권한이 적합하지 않습니다.', '/home'))
+        return
+    }
+    const _find = req.query.data ? req.query.data.split(" ") : ''
+    const _cate = req.query.category ? req.query.category.toString() : ''
+    const _page_index = toNumber(req.query.page)
+    const _page = _page_index * COUNT_PER_PAGE
+    var _condition = ` where is_buyed=0 and is_hidden=1`
+    _condition += _cate ? ` and category='${_cate}'` : ''
+    if (_condition) {
+        _condition += req.query.creator ? ` and seller='${req.query.creator}'` : ''
+    } else {
+        _condition += req.query.creator ? ` seller='${req.query.creator}'` : ''
+    }
+    const result = await sqlQuery('select * from item' + _condition + ` order by num desc limit ${_page}, ${COUNT_PER_PAGE}`)
+    var max_page = await sqlQuery('select count(num) from item' + _condition)
+    max_page = Math.ceil(toNumber(max_page[0]['count(num)']) / COUNT_PER_PAGE)
+    var itemsHTML = ''
+    for (var i in result) {
+        if (_find) {
+            var isInTitle = isExistKeyword(result[i].title, _find)
+            var isInContent = isExistKeyword(result[i].content, _find)
+            if (!isInTitle && !isInContent) {
+                continue
+            }
+        }
+        var imgSrc = result[i].is_file ? '/img/icon/carrot.png' : `/img/item/${result[i].imgName}`
+        itemsHTML += `
+        <a href="/item/${result[i].num}">
+            <div class="item">
+                <div class="item-header center">
+                    <div class="item-imgWrap"><img src="${imgSrc}"/></div>
+                </div>
+                <div class="item-container">
+                    <div class="item-title">${result[i].title}</div>
+                    <div class="item-description">${result[i].seller}</div>
+                    <div class="item-price">${result[i].price == 0 ? '무료' : toFormatMoney(result[i].price) + '원'}</div>
+                </div>
+            </div>
+        </a>
+    `
+    }
+
+    var url = `/search?data=${_find}&category=${_cate}&page=`
+    var backHTML = '<div class="pageBtn center dontgo">←</div>'
+    var nextHTML = '<div class="pageBtn center dontgo">→</div>'
+    if (_page_index > 0) {
+        backHTML = `<a href='${url}${_page_index - 1}'><div class="pageBtn center">←</div></a>`
+    }
+    if (_page_index < max_page - 1) {
+        nextHTML = `<a href='${url}${_page_index + 1}'><div class="pageBtn center">→</div></a>`
+    }
+    await sendRender(req, res, './views/admincontent.html', {
+        items: itemsHTML ? itemsHTML : "<div class='notFound'>게시물을 찾을 수 없습니다.</div>",
+        category: _find ? "검색" : (req.query.category == undefined ? '거래' : CategoryToKOR[req.query.category]),
+        pageNum: _page_index + 1,
+        gotoBack: backHTML,
+        gotoNext: nextHTML,
+        soldcontent:'hiddencontent'
+    })
+})
+
+
 io.sockets.on('connection', function (socket) {
     socket.on('newUserConnect', function (data) {
 
@@ -911,6 +1073,5 @@ io.sockets.on('connection', function (socket) {
         io.sockets.emit('updateMessage', data);
     });
 });
-
 
 server.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))
