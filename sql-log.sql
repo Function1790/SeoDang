@@ -46,3 +46,16 @@ create table alert(
     primary key(num)
 );
 insert into alert (listener_num, content, post_time, isRead, link) value (1, '이건 테스트입니다', '2024-03-29 7:37:00', 0, '/item/1');
+
+create table comment(
+    num int not null auto_increment, 
+    to_num int not null,
+    from_num int not null,
+    from_uid text not null,
+    reply_to int,
+    content text not null, 
+    post_time datetime not null,
+    primary key(num)
+);
+insert into comment (to_num, from_num, from_uid , reply_to, content, post_time) value (1, 1, 'guest', null, '이건 테스트', '2024-04-08 8:19:00');
+

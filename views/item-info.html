@@ -50,30 +50,50 @@
                             <div class="item-price">{{price}}</div>
                         </div>
                     </div>
-                    <div class="item-buttonWrap">
-                        {{callBtn}}
+                    <div class="commenter">
+                        <form action="/comment-check" method="post" id="form" enctype="multipart/form-data">
+                            <div class="inputLabel">댓글</div>
+                            <div class="display-input-wrap">
+                                <div class="comment-input-wrap">
+                                    <textarea class="input input-long" id="content" type="text" name="content"></textarea>
+                                </div>
+                                <div class="submit-wrap">
+                                    <input type="submit" class="center summitBtn" value="댓글">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="comment-wrap">
+                        <div class="comment">
+                            <div class="comment-name">홍길동</div>
+                            <div class="comment-content">이거 맞음?</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            {{caller}}
-        </div>
-        <div class="footer">
-            <div class="nav-item page-selected">
-                <a href="/home">
-                    <img class="nav-icon" src="/img/buttonIcon/home2.png" />
-                </a>
-            </div>
-            <div class="nav-item page-not-selected">
-                <a href="/write">
-                    <img class="nav-icon" src="/img/buttonIcon/write.png" />
-                </a>
-            </div>
-            <div class="nav-item page-not-selected">
-                <a href="/profile">
-                    <img class="nav-icon" src="/img/buttonIcon/user.png" />
-                </a>
+                <div class="item-buttonWrap">
+                    {{callBtn}}
+                </div>
             </div>
         </div>
+        {{caller}}
+    </div>
+    <div class="footer">
+        <div class="nav-item page-selected">
+            <a href="/home">
+                <img class="nav-icon" src="/img/buttonIcon/home2.png" />
+            </a>
+        </div>
+        <div class="nav-item page-not-selected">
+            <a href="/write">
+                <img class="nav-icon" src="/img/buttonIcon/write.png" />
+            </a>
+        </div>
+        <div class="nav-item page-not-selected">
+            <a href="/profile">
+                <img class="nav-icon" src="/img/buttonIcon/user.png" />
+            </a>
+        </div>
+    </div>
     </div>
     <script src="/src/item-info.js"></script>
 </body>

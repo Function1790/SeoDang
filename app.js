@@ -282,7 +282,7 @@ function checkPost(req, res, path = 'write', isNotImg = false) {
     }
     if (body.title.length < 5) {
         const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
-        res.send(forcedMoveWithAlertCode("제목의 길이는 5글자 이하여야 합니다.", link))
+        res.send(forcedMoveWithAlertCode("제목의 길이는 5글자 이상이여야 합니다.", link))
         return false
     }
     return true
@@ -414,13 +414,14 @@ app.get('/search', async (req, res) => {
     const _cate = req.query.category ? req.query.category.toString() : ''
     const _page_index = toNumber(req.query.page)
     const _page = _page_index * COUNT_PER_PAGE
-    var _condition = req.query.creator ? ' where 1=1' : ` where is_buyed=0 and is_hidden=0`
+    var _condition = req.query.creator ? ' where is_hidden=0' : ` where is_buyed=0 and is_hidden=0`
     _condition += _cate ? ` and category='${_cate}'` : ''
     if (_condition) {
         _condition += req.query.creator ? ` and seller='${req.query.creator}'` : ''
     } else {
         _condition += req.query.creator ? ` seller='${req.query.creator}'` : ''
     }
+    
     const result = await sqlQuery('select * from item' + _condition + ` order by num desc limit ${_page}, ${COUNT_PER_PAGE}`)
     var max_page = await sqlQuery('select count(num) from item' + _condition)
     max_page = Math.ceil(toNumber(max_page[0]['count(num)']) / COUNT_PER_PAGE)
@@ -705,7 +706,7 @@ app.get('/modify/:num', async (req, res) => {
             filesHTML += `<div id="file${i}" class="filebox"><p class="name">${toShort(files[i], 10)}</p></div>`
         }
     }
-    var hideBtn = isAdmin(req) ? `<a href="/hide/{{num}}">
+    var hideBtn = isAdmin(req) ? `<a href="/hide/${req.params.num}">
                                         <div class="confirmBtn center">가리기</div>
                                     </a>`: ''
     await sendRender(req, res, './views/modify.html', {
@@ -833,7 +834,7 @@ app.get('/hide/:num', async (req, res) => {
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
 
     var title = result[0].title
-    await sqlQuery(`update item set  where num=${req.params.num}`)
+    await sqlQuery(`update item set is_hidden=1 where num=${req.params.num}`)
     await sendAlert(req, `<span class="bold">${title}</span> 게시물을 가렸습니다.`, '')
     if (isAdmin(req)) {
         await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 삭제되었습니다.`, '', result[0].seller_num)
@@ -922,7 +923,7 @@ app.get('/manage', async (req, res) => {
 })
 
 app.get('/manage/soldcontent', async (req, res) => {
-    if(isAdmin(req)){
+    if(!isAdmin(req)){
         res.send(forcedMoveWithAlertCode('권한이 적합하지 않습니다.', '/home'))
         return
     }
@@ -930,7 +931,7 @@ app.get('/manage/soldcontent', async (req, res) => {
     const _cate = req.query.category ? req.query.category.toString() : ''
     const _page_index = toNumber(req.query.page)
     const _page = _page_index * COUNT_PER_PAGE
-    var _condition = ` where is_buyed=1 and is_hidden=0`
+    var _condition = ` where is_buyed=1`
     _condition += _cate ? ` and category='${_cate}'` : ''
     if (_condition) {
         _condition += req.query.creator ? ` and seller='${req.query.creator}'` : ''
@@ -986,7 +987,7 @@ app.get('/manage/soldcontent', async (req, res) => {
 })
 
 app.get('/manage/hiddencontent', async (req, res) => {
-    if(isAdmin(req)){
+    if(!isAdmin(req)){
         res.send(forcedMoveWithAlertCode('권한이 적합하지 않습니다.', '/home'))
         return
     }
@@ -994,7 +995,7 @@ app.get('/manage/hiddencontent', async (req, res) => {
     const _cate = req.query.category ? req.query.category.toString() : ''
     const _page_index = toNumber(req.query.page)
     const _page = _page_index * COUNT_PER_PAGE
-    var _condition = ` where is_buyed=0 and is_hidden=1`
+    var _condition = ` where is_hidden=1`
     _condition += _cate ? ` and category='${_cate}'` : ''
     if (_condition) {
         _condition += req.query.creator ? ` and seller='${req.query.creator}'` : ''
