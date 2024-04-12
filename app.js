@@ -352,6 +352,7 @@ function getCallerHTML(req, sqlResult) {
 async function sendAlert(req, content, link, listener_num = '') {
     var listener_num = listener_num ? listener_num : req.session.num
     var query = `insert into alert (listener_num, content, post_time, isRead, link) value (${listener_num}, '${content}', '${formatDatetimeInSQL(new Date())}', 0, '${link}');`
+    print(query)
     await sqlQuery(query)
 }
 
@@ -396,15 +397,16 @@ async function isWrongWithParam(req, res) {
 
 async function getCommentHTML(req, item) {
     //(to_num, from_num, from_uid , reply_to, content, post_time)
-    if (!req.isLogined) { return '' }
+    if (!req.session.isLogined) { return '' }
     var comments = await sqlQuery(`select * from comment where from_num=${req.session.num} and to_num=${item.num}`)
     if (req.session.num == item.seller_num || isAdmin(req)) {
         comments = await sqlQuery(`select * from comment where to_num=${item.num}`)
     }
+
     var commentsList = []
     var replyedList = []
     for (var i in comments) {
-        if (i in replyedList) {
+        if (`${i}` in replyedList) {
             continue
         }
         commentsList.push(comments[i])
@@ -417,6 +419,7 @@ async function getCommentHTML(req, item) {
             }
         }
     }
+
     var commentHTML = ''
     for (var i in commentsList) {
         var _comment = commentsList[i]
@@ -1124,10 +1127,15 @@ app.post('/comment-check/:num', upload2.array('itemFile'), async(req, res) => {
     query += `(${req.params.num}, ${req.session.num}, "${req.session.uid}", ${reply_to}, "${content}", "${formatDatetimeInSQL(new Date())}");`
     await sqlQuery(query)
     const _item = await sqlQuery(`select * from item where num=${req.params.num}`)
-    await sendAlert(req, `<span class="bold">${_item[0].title}</span> 게시물에 댓글을 달았습니다.`, `/item/${req.params.num}`)
-        //reply to
-    if (req.session.num !== _item[0].seller_num) {
-        await sendAlert(req, `<span class="bold">${_item[0].title}</span> 게시물에 <span class="bold">${req.session.uid}</span>님이 댓글을 달았습니다.`, `/item/${req.params.num}`, _item[0].seller_num)
+    if (!body.reply) {
+        await sendAlert(req, `<span class="bold">${_item[0].title}</span> 게시물에 댓글을 달았습니다.`, `/item/${req.params.num}`)
+        if (req.session.num !== _item[0].seller_num) {
+            await sendAlert(req, `<span class="bold">${_item[0].title}</span> 게시물에 <span class="bold">${req.session.uid}</span>님이 댓글을 달았습니다.`, `/item/${req.params.num}`, _item[0].seller_num)
+        }
+    } else {
+        const reply_data = await sqlQuery(`select * from comment where num=${body.reply}`)
+        await sendAlert(req, `<span class="bold">${reply_data[0].from_uid}</span>의 댓글에 답하였습니다.`, `/item/${req.params.num}`, req.session.num)
+        await sendAlert(req, `<span class="bold">${req.session.uid}</span>님이 <span class="bold">${_item[0].title}</span> 게시물에 답하였습니다.`, `/item/${req.params.num}`, reply_data[0].from_uid)
     }
     res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
