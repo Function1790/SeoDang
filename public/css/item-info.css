@@ -211,12 +211,17 @@
     height: 40px;
     border-radius: 50px;
     font-weight: 600;
+    cursor: pointer;
 }
 
 .submit-wrap {
     width: 80%;
     display: flex;
-    justify-content: end;
+    justify-content: space-between;
+}
+
+.bold {
+    font-weight: 500;
 }
 
 .inputLabel {
@@ -224,4 +229,45 @@
     margin-left: 15px;
     font-size: 20px;
     font-weight: 700;
+}
+
+.comment {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
+}
+
+.comment-name {
+    font-size: 17px;
+    font-weight: 500;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.comment-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.comment-img {
+    width: 42px;
+    height: 42px;
+    border: 2px solid;
+    padding: 2px;
+    border-radius: 50%;
+}
+
+.comment-button {
+    user-select: none;
+    font-size: 12px;
+    font-weight: 500;
+    color: #777;
+    cursor: pointer;
 }

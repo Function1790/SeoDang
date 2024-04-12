@@ -43,7 +43,6 @@ body {
     z-index: 50;
 }
 
-
 .container {
     margin-top: 60px;
     margin-bottom: 70px;
@@ -96,23 +95,23 @@ body {
     font-weight: 800;
 }
 
-.nav-item{
+.nav-item {
     height: 100%;
     display: flex;
     align-items: center;
 }
 
-.nav-icon{
+.nav-icon {
     width: 30px;
     height: 30px;
     position: cursor;
 }
 
-.page-not-selected{
+.page-not-selected {
     opacity: 30%;
 }
 
-.page-selected{
+.page-selected {
     opacity: 90%;
 }
 
@@ -130,7 +129,7 @@ body {
     justify-content: right;
 }
 
-.tool{
+.tool {
     margin-right: 20px;
 }
 
@@ -220,4 +219,8 @@ input {
 #searchGoBtn {
     height: 23px;
     width: 23px;
+}
+
+.hidden {
+    display: none;
 }

@@ -32,3 +32,24 @@ try {
         wrapCaller.style.display = 'flex'
     }
 } catch {}
+
+const comments = document.getElementsByClassName('comment')
+const replyKeyInput = document.getElementById('reply-key')
+const replyDisplay = document.getElementsByClassName('reply-name')[0]
+for (var i = 0; i < comments.length; i++) {
+    comments[i].replyBtn = comments[i].getElementsByClassName('comment-reply')[0]
+    comments[i].name = comments[i].getElementsByClassName('comment-name')[0].innerHTML
+    comments[i].key = comments[i].getElementsByClassName('comment-key')[0].innerHTML
+    comments[i].replyBtn.num = i
+    comments[i].replyBtn.onclick = (event) => {
+        var num = event.target.num
+        const _comment = comments[num]
+        if (Number(replyKeyInput.value) == Number(_comment.key)) {
+            replyKeyInput.value = ''
+            replyDisplay.innerHTML = ``
+            return
+        }
+        replyKeyInput.value = Number(_comment.key)
+        replyDisplay.innerHTML = `<span class="bold">${_comment.name}</span>에게 답하기`
+    }
+}
