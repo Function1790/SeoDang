@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/img/item/')
     },
-    filename: async(req, file, cb) => {
+    filename: async (req, file, cb) => {
         const randomID = uuid4();
         const ext = path.extname(file.originalname);
         const filename = randomID + ext;
@@ -130,8 +130,8 @@ const CategoryDetail = {
     ]
 }
 const COUNT_PER_PAGE = 20
-    //TP2
-    //<----------Function---------->
+//TP2
+//<----------Function---------->
 const print = (data) => console.log(data)
 
 async function readFile(path) {
@@ -352,7 +352,6 @@ function getCallerHTML(req, sqlResult) {
 async function sendAlert(req, content, link, listener_num = '') {
     var listener_num = listener_num ? listener_num : req.session.num
     var query = `insert into alert (listener_num, content, post_time, isRead, link) value (${listener_num}, '${content}', '${formatDatetimeInSQL(new Date())}', 0, '${link}');`
-    print(query)
     await sqlQuery(query)
 }
 
@@ -398,7 +397,7 @@ async function isWrongWithParam(req, res) {
 async function getCommentHTML(req, item) {
     //(to_num, from_num, from_uid , reply_to, content, post_time)
     if (!req.session.isLogined) { return '' }
-    var comments = await sqlQuery(`select * from comment where from_num=${req.session.num} and to_num=${item.num}`)
+    var comments = await sqlQuery(`select * from comment where to_num=${item.num} and from_num=${req.session.num}`)
     if (req.session.num == item.seller_num || isAdmin(req)) {
         comments = await sqlQuery(`select * from comment where to_num=${item.num}`)
     }
@@ -406,7 +405,7 @@ async function getCommentHTML(req, item) {
     var commentsList = []
     var replyedList = []
     for (var i in comments) {
-        if (`${i}` in replyedList) {
+        if (replyedList.indexOf(`${i}`) != -1) {
             continue
         }
         commentsList.push(comments[i])
@@ -450,7 +449,7 @@ async function getCommentHTML(req, item) {
                         <div class="comment-button-wrap">
                             <div class="comment-button comment-reply">답하기</div>
                         </div>
-                        <div class="hidden comment-key">${_replyed.num}</div>
+                        <div class="hidden comment-key">${_comment.num}</div>
                     </div>
                 </div>`
         }
@@ -467,13 +466,13 @@ app.get('/', (req, res) => {
     res.send(forcedMoveCode('/home'))
 })
 
-app.get('/home', async(req, res) => {
-    //loginAdmin(req)
+app.get('/home', async (req, res) => {
+    loginAdmin(req)
     await sendRender(req, res, './views/home.html')
 })
 
 
-app.get('/search', async(req, res) => {
+app.get('/search', async (req, res) => {
     const _find = req.query.data ? req.query.data.split(" ") : ''
     const _cate = req.query.category ? req.query.category.toString() : ''
     const _page_index = toNumber(req.query.page)
@@ -533,7 +532,7 @@ app.get('/search', async(req, res) => {
     })
 })
 
-app.get('/item/:num', async(req, res) => {
+app.get('/item/:num', async (req, res) => {
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
     try {
         if (result.length === 0) {
@@ -545,7 +544,7 @@ app.get('/item/:num', async(req, res) => {
         return
     }
     const _item = result[0]
-        //오류 처리
+    //오류 처리
     const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
     const seller = userResult[0]
     var callBtn = _item.is_buyed ? `<div class="callBtn soldout">거래완료</div>` : `<div class="callBtn">연락하기</div>`
@@ -596,7 +595,8 @@ app.get('/item/:num', async(req, res) => {
         callBtn: callBtn,
         imgHTML: imgHTML,
         files: filesHTML,
-        comment: await getCommentHTML(req, _item)
+        comment: await getCommentHTML(req, _item),
+        commentstate: req.session.isLogined ? '' : 'hidden'
     })
 })
 
@@ -612,7 +612,7 @@ app.get('/download', (req, res, next) => {
 });
 
 
-app.get('/login', async(req, res) => {
+app.get('/login', async (req, res) => {
     await sendRender(req, res, './views/login.html', {
         uid: req.query.uid == undefined ? '' : req.query.uid
     })
@@ -627,7 +627,7 @@ app.get('/logout', (req, res) => {
     res.send(forcedMoveWithAlertCode('로그아웃 되셨습니다.', '/'))
 })
 
-app.post('/login-check', async(req, res) => {
+app.post('/login-check', async (req, res) => {
     const body = req.body
     const uid = connection.escape(body.uid)
     const upw = connection.escape(body.upw)
@@ -644,7 +644,7 @@ app.post('/login-check', async(req, res) => {
     res.send(forcedMoveWithAlertCode(`${result[0].nickname}님 환영합니다.`, "/"))
 })
 
-app.get('/write', async(req, res) => {
+app.get('/write', async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
@@ -661,7 +661,7 @@ app.get('/write', async(req, res) => {
     })
 })
 
-app.post('/write-check', upload.single('itemImg'), async(req, res) => {
+app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
@@ -685,7 +685,7 @@ app.post('/write-check', upload.single('itemImg'), async(req, res) => {
     res.send(forcedMoveCode(`/search?category=${body.category}`))
 })
 
-app.post('/write-check2', upload2.array('itemFile'), async(req, res) => {
+app.post('/write-check2', upload2.array('itemFile'), async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
@@ -714,7 +714,7 @@ app.post('/write-check2', upload2.array('itemFile'), async(req, res) => {
     res.send(forcedMoveCode(`/search?category=${body.category}`))
 })
 
-app.get('/view-profile', async(req, res) => {
+app.get('/view-profile', async (req, res) => {
     const result = await sqlQuery(`select * from user where uid='${req.query.uid}'`)
 
     if (!result) {
@@ -728,7 +728,7 @@ app.get('/view-profile', async(req, res) => {
     })
 })
 
-app.get('/profile', async(req, res) => {
+app.get('/profile', async (req, res) => {
     if (!req.session.isLogined) {
         res.send(forcedMoveCode('/login'))
         return
@@ -742,7 +742,7 @@ app.get('/profile', async(req, res) => {
     })
 })
 
-app.get('/modify/:num', async(req, res) => {
+app.get('/modify/:num', async (req, res) => {
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
     try {
         if (result.length === 0) {
@@ -754,7 +754,7 @@ app.get('/modify/:num', async(req, res) => {
         return
     }
     const _item = result[0]
-        //오류 처리
+    //오류 처리
     const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
     const seller = userResult[0]
     if (seller.num !== req.session.num && !isAdmin(req)) {
@@ -789,7 +789,7 @@ app.get('/modify/:num', async(req, res) => {
     })
 })
 
-app.post('/modify-check/:num', upload.single('itemImg'), async(req, res) => {
+app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
@@ -809,7 +809,7 @@ app.post('/modify-check/:num', upload.single('itemImg'), async(req, res) => {
     var caller = body.caller.replaceAll('<', '< ')
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
     const _item = result[0]
-        //오류 처리
+    //오류 처리
     const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
     const seller = userResult[0]
     if (seller.num !== req.session.num && !isAdmin(req)) {
@@ -833,7 +833,7 @@ app.post('/modify-check/:num', upload.single('itemImg'), async(req, res) => {
     res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
 
-app.post('/modify-check2/:num', upload2.array('itemFile'), async(req, res) => {
+app.post('/modify-check2/:num', upload2.array('itemFile'), async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
@@ -853,7 +853,7 @@ app.post('/modify-check2/:num', upload2.array('itemFile'), async(req, res) => {
     var caller = body.caller.replaceAll('<', '< ')
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
     const _item = result[0]
-        //오류 처리
+    //오류 처리
     const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
     const seller = userResult[0]
     if (seller.num !== req.session.num && !isAdmin(req)) {
@@ -877,7 +877,7 @@ app.post('/modify-check2/:num', upload2.array('itemFile'), async(req, res) => {
 })
 
 
-app.get('/delete/:num', async(req, res) => {
+app.get('/delete/:num', async (req, res) => {
     if (await isWrongWithParam(req, res)) {
         return
     }
@@ -892,7 +892,7 @@ app.get('/delete/:num', async(req, res) => {
     res.send(forcedMoveCode(`/search?category=${result[0].category}`))
 })
 
-app.get('/hide/:num', async(req, res) => {
+app.get('/hide/:num', async (req, res) => {
     if (await isWrongWithParam(req, res)) {
         return
     }
@@ -907,7 +907,7 @@ app.get('/hide/:num', async(req, res) => {
     res.send(forcedMoveCode(`/search?category=${result[0].category}`))
 })
 
-app.get('/soldout/:num', async(req, res) => {
+app.get('/soldout/:num', async (req, res) => {
     if (await isWrongWithParam(req, res)) {
         return
     }
@@ -922,7 +922,7 @@ app.get('/soldout/:num', async(req, res) => {
     res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
 
-app.get('/alert', async(req, res) => {
+app.get('/alert', async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
@@ -947,13 +947,13 @@ app.get('/alert', async(req, res) => {
     await sqlQuery(`update alert set isRead=1 where listener_num=${req.session.num} `)
 })
 
-app.get('/change-pwd', async(req, res) => {
+app.get('/change-pwd', async (req, res) => {
     await sendRender(req, res, './views/change_pwd.html', {
         uid: req.query.uid == undefined ? '' : req.query.uid
     })
 })
 
-app.post('/change-pwd-check', async(req, res) => {
+app.post('/change-pwd-check', async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
@@ -972,7 +972,7 @@ app.post('/change-pwd-check', async(req, res) => {
     res.send(forcedMoveWithAlertCode('비밀번호가 변경되었습니다.', '/logout'))
 })
 
-app.get('/chat', async(req, res) => {
+app.get('/chat', async (req, res) => {
     const uid = req.session.uid
     const to = req.query.to
     await sendRender(req, res, './views/chat.html', {
@@ -981,13 +981,13 @@ app.get('/chat', async(req, res) => {
     })
 })
 
-app.get('/manage', async(req, res) => {
+app.get('/manage', async (req, res) => {
     await sendRender(req, res, './views/manage.html', {
 
     })
 })
 
-app.get('/manage/soldcontent', async(req, res) => {
+app.get('/manage/soldcontent', async (req, res) => {
     if (!isAdmin(req)) {
         res.send(forcedMoveWithAlertCode('권한이 적합하지 않습니다.', '/home'))
         return
@@ -1051,7 +1051,7 @@ app.get('/manage/soldcontent', async(req, res) => {
     })
 })
 
-app.get('/manage/hiddencontent', async(req, res) => {
+app.get('/manage/hiddencontent', async (req, res) => {
     if (!isAdmin(req)) {
         res.send(forcedMoveWithAlertCode('권한이 적합하지 않습니다.', '/home'))
         return
@@ -1115,7 +1115,7 @@ app.get('/manage/hiddencontent', async(req, res) => {
     })
 })
 
-app.post('/comment-check/:num', upload2.array('itemFile'), async(req, res) => {
+app.post('/comment-check/:num', upload2.array('itemFile'), async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
@@ -1130,39 +1130,16 @@ app.post('/comment-check/:num', upload2.array('itemFile'), async(req, res) => {
     if (!body.reply) {
         await sendAlert(req, `<span class="bold">${_item[0].title}</span> 게시물에 댓글을 달았습니다.`, `/item/${req.params.num}`)
         if (req.session.num !== _item[0].seller_num) {
-            await sendAlert(req, `<span class="bold">${_item[0].title}</span> 게시물에 <span class="bold">${req.session.uid}</span>님이 댓글을 달았습니다.`, `/item/${req.params.num}`, _item[0].seller_num)
+            await sendAlert(req, `<span class="bold">${_item[0].title}</span> 게시물에 <span class="bold">${req.session.uid}</span>님이 새 댓글을 달았습니다.`, `/item/${req.params.num}`, _item[0].seller_num)
         }
     } else {
         const reply_data = await sqlQuery(`select * from comment where num=${body.reply}`)
-        await sendAlert(req, `<span class="bold">${reply_data[0].from_uid}</span>의 댓글에 답하였습니다.`, `/item/${req.params.num}`, req.session.num)
-        await sendAlert(req, `<span class="bold">${req.session.uid}</span>님이 <span class="bold">${_item[0].title}</span> 게시물에 답하였습니다.`, `/item/${req.params.num}`, reply_data[0].from_uid)
+        await sendAlert(req, `<span class="bold">${reply_data[0].from_uid}</span>님의 댓글에 답하였습니다.`, `/item/${req.params.num}`, req.session.num)
+        if (req.session.num !== reply_data[0].from_num) {
+            await sendAlert(req, `<span class="bold">${req.session.uid}</span>님이 <span class="bold">${_item[0].title}</span> 게시물에 답하였습니다.`, `/item/${req.params.num}`, reply_data[0].from_num)
+        }
     }
     res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
-
-
-io.sockets.on('connection', function(socket) {
-    socket.on('newUserConnect', function(data) {
-
-        socket.uid = data.uid
-
-        io.sockets.emit('updateMessage', {
-            name: 'SERVER',
-            message: socket.uid + '님이 접속했습니다.'
-        });
-    });
-
-    socket.on('disconnect', function() {
-        io.sockets.emit('updateMessage', {
-            name: 'SERVER',
-            message: socket.uid + '님이 퇴장했습니다.'
-        });
-    });
-
-    socket.on('sendMessage', function(data) {
-        data.name = socket.uid;
-        io.sockets.emit('updateMessage', data);
-    });
-});
 
 server.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))
