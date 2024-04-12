@@ -178,7 +178,7 @@ async function renderFile(req, path, replaceItems = {}) {
     for (i in replaceItems) {
         content = content.replaceAll(`{{${i}}}`, replaceItems[i])
     }
-    return '<link rel="icon" href="/img/icon/logo.jpg"/>' + content
+    return '<link rel="icon" href="/img/icon/logo.png"/>' + content
 }
 
 /** res.send(renderFile(...)) */
@@ -396,21 +396,37 @@ async function isWrongWithParam(req, res) {
 
 async function getCommentHTML(req, item) {
     //(to_num, from_num, from_uid , reply_to, content, post_time)
-    //if (!isLogined(req)) { return false }
+    if (!req.isLogined) { return '' }
     var comments = await sqlQuery(`select * from comment where from_num=${req.session.num} and to_num=${item.num}`)
     if (req.session.num == item.seller_num || isAdmin(req)) {
         comments = await sqlQuery(`select * from comment where to_num=${item.num}`)
     }
-    var commentHTML = ''
+    var commentsList = []
+    var replyedList = []
     for (var i in comments) {
-        var _comment = comments[i]
+        if (i in replyedList) {
+            continue
+        }
+        commentsList.push(comments[i])
+        var last = commentsList.length - 1
+        commentsList[last].reply = []
+        for (var j in comments) {
+            if (comments[i].num === comments[j].reply_to) {
+                commentsList[last].reply.push(comments[j])
+                replyedList.push(j)
+            }
+        }
+    }
+    var commentHTML = ''
+    for (var i in commentsList) {
+        var _comment = commentsList[i]
         commentHTML += `
         <div class="comment">
             <div class="comment-header">
                 <img class="comment-img" src="/img/icon/user.png">
             </div>
             <div class="comment-container">
-                <div class="comment-name">${_comment.from_uid} ${_comment.reply_to ? '<- 답글':''}</div>
+                <div class="comment-name">${_comment.from_uid}</div>
                 <div class="comment-content">${_comment.content}</div>
                 <div class="comment-button-wrap">
                     <div class="comment-button comment-reply">답하기</div>
@@ -418,6 +434,23 @@ async function getCommentHTML(req, item) {
                 <div class="hidden comment-key">${_comment.num}</div>
             </div>
         </div>`
+        for (var j in _comment.reply) {
+            var _replyed = _comment.reply[j]
+            commentHTML += `
+                <div class="comment comment-replyed">
+                    <div class="comment-header">
+                        <img class="comment-img" src="/img/icon/user.png">
+                    </div>
+                    <div class="comment-container">
+                        <div class="comment-name">${_replyed.from_uid}</div>
+                        <div class="comment-content">${_replyed.content}</div>
+                        <div class="comment-button-wrap">
+                            <div class="comment-button comment-reply">답하기</div>
+                        </div>
+                        <div class="hidden comment-key">${_replyed.num}</div>
+                    </div>
+                </div>`
+        }
     }
     return commentHTML
 }
@@ -432,7 +465,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/home', async(req, res) => {
-    loginAdmin(req)
+    //loginAdmin(req)
     await sendRender(req, res, './views/home.html')
 })
 

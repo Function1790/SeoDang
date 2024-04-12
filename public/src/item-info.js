@@ -36,6 +36,7 @@ try {
 const comments = document.getElementsByClassName('comment')
 const replyKeyInput = document.getElementById('reply-key')
 const replyDisplay = document.getElementsByClassName('reply-name')[0]
+const inputComment = document.getElementsByClassName('input-long')[0]
 for (var i = 0; i < comments.length; i++) {
     comments[i].replyBtn = comments[i].getElementsByClassName('comment-reply')[0]
     comments[i].name = comments[i].getElementsByClassName('comment-name')[0].innerHTML
@@ -49,6 +50,7 @@ for (var i = 0; i < comments.length; i++) {
             replyDisplay.innerHTML = ``
             return
         }
+        inputComment.focus()
         replyKeyInput.value = Number(_comment.key)
         replyDisplay.innerHTML = `<span class="bold">${_comment.name}</span>에게 답하기`
     }

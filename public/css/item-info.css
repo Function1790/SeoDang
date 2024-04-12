@@ -271,3 +271,8 @@
     color: #777;
     cursor: pointer;
 }
+
+.comment-replyed {
+    margin-left: 0px;
+    transform: scale(0.8);
+}
