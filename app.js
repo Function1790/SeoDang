@@ -949,7 +949,7 @@ app.get('/alert', async (req, res) => {
 
 app.get('/change-pwd', async (req, res) => {
     await sendRender(req, res, './views/change_pwd.html', {
-        uid: req.query.uid == undefined ? '' : req.query.uid
+        uid: req.session.uid == undefined ? '' : req.session.uid
     })
 })
 
@@ -966,6 +966,10 @@ app.post('/change-pwd-check', async (req, res) => {
         }
     } catch {
         res.send(forcedMoveWithAlertCode("비밀번호가 옳바르지 않습니다.", "/change-pwd"))
+        return
+    }
+    if(body.newpw.length<4 || body.newpw.length>20){
+        res.send(forcedMoveWithAlertCode("비밀번호는 4~20자리여야 합니다", "/change-pwd"))
         return
     }
     await sqlQuery(`update user set upw='${body.newpw}' where num=${req.session.num}`)

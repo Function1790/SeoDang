@@ -45,26 +45,30 @@
             </form>
         </div>
         <div class="container">
-            <div class="container center">
-                <div class="profileWrap">
-                    <div class="profileHeader"></div>
-                    <div class="profileContainer">
-                        <div class="dataWrap center">{{nickname}}</div>
-                        <div class="dataWrap center">{{uid}}</div>
-                        <div class="dataWrap center">{{schoolid}}</div>
-                        <div class="center btnWrap">
-                            <a href="/search?creator={{uid}}">
-                                <div class="cbutton">내 글</div>
-                            </a>
-                            <a href="/logout">
-                                <div class="cbutton">로그아웃</div>
-                            </a>
-                            <a href="/change-pwd">
-                                <div class="cbutton">비밀번호 변경하기</div>
-                            </a>
-                        </div>
+            <div class="profile">
+                <div class="profile-data">
+                    <div class="profile-img-wrap">
+                        <img class="profile-img" src="/img/icon/user.png" alt="">
+                    </div>
+                    <div class="profile-nickname">{{nickname}}</div>
+                    <input type="range" id="temp-value" min="0" max="100" value="36.5">
+                    <div class="profile-private-data">
+                        <div class="text-data">이름 : {{uid}}</div>
+                        <div class="text-data">학번 : {{schoolid}}</div>
                     </div>
                 </div>
+                <div class="divid-bar"></div>
+            </div>
+            <div class="buttons-wrap">
+                <a href="/search?creator={{uid}}">
+                    <div class="goto-button">내 글</div>
+                </a>
+                <a href="/logout">
+                    <div class="goto-button">로그아웃</div>
+                </a>
+                <a href="/change-pwd">
+                    <div class="goto-button">비번변경</div>
+                </a>
             </div>
         </div>
         <div class="footer">
