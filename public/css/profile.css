@@ -73,11 +73,18 @@
     margin-top: 20px;
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
+    justify-content: left;
+    flex-wrap: wrap;
+    max-width: 80%;
+}
+
+.goto-btn-wrap {
+    margin: 0px 15px;
+    margin-bottom: 10px;
 }
 
 .goto-button {
-    background-color: #ffba6c;
+    background-color: #ffe4bd;
     border-radius: 50%;
     width: 70px;
     height: 70px;
@@ -87,4 +94,12 @@
     font-size: 18px;
     font-weight: 700;
     color: white;
+}
+
+.goto-button > img {
+    width: 100%;
+}
+
+#search {
+    margin-bottom: 20px;
 }

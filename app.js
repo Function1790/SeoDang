@@ -252,12 +252,12 @@ function checkPost(req, res, path = 'write', isNotImg = false) {
     var title = body.title ? body.title : ''
     var content = body.content ? body.content : ''
     var category = body.category ? body.category : ''
-    var caller = body.caller ? body.caller : ''
+    var caller = ''
     try {
         var price = body.price ? body.price : 0
         price = Number(price)
     } catch {
-        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
+        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
         res.send(forcedMoveWithAlertCode("가격은 0 이상의 정수를 입력해주세요.", link))
         return false
     }
@@ -265,14 +265,14 @@ function checkPost(req, res, path = 'write', isNotImg = false) {
         const { originalname, filename, size } = req.file;
     } catch {
         if (!isNotImg && req.files == undefined) {
-            const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
+            const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
             res.send(forcedMoveWithAlertCode("파일을 선택해주세요.", link))
             return false
         }
     }
 
     if (!body.title || !body.content || !body.category) {
-        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
+        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
         res.send(forcedMoveWithAlertCode("입력란에 빈칸이 없어야 합니다.", link))
         return false
     } else if (price < 0) {
@@ -281,8 +281,13 @@ function checkPost(req, res, path = 'write', isNotImg = false) {
         return false
     }
     if (body.title.length < 5) {
-        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}&caller=${caller}`
+        const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
         res.send(forcedMoveWithAlertCode("제목의 길이는 5글자 이상이여야 합니다.", link))
+        return false
+    }
+    if (price > 1000000) {
+        const link = `/${path}?title=${title}&content=${content}&price=${1000000}&category=${category}`
+        res.send(forcedMoveWithAlertCode("가격은 1,000,000원 이하의 정수여야 합니다.", link))
         return false
     }
     return true
@@ -489,6 +494,8 @@ app.get('/search', async (req, res) => {
     var max_page = await sqlQuery('select count(num) from item' + _condition)
     max_page = Math.ceil(toNumber(max_page[0]['count(num)']) / COUNT_PER_PAGE)
     var itemsHTML = ''
+    var past = req.query.creator ? `past=${req.query.creator}&` : ''
+    var searcher = req.query.data ? `searcher=${req.query.data}` : ''
     for (var i in result) {
         if (_find) {
             var isInTitle = isExistKeyword(result[i].title, _find)
@@ -499,7 +506,7 @@ app.get('/search', async (req, res) => {
         }
         var imgSrc = result[i].is_file ? '/img/icon/carrot.png' : `/img/item/${result[i].imgName}`
         itemsHTML += `
-        <a href="/item/${result[i].num}">
+        <a href="/item/${result[i].num}?${past}${searcher}">
             <div class="item">
                 <div class="item-header center">
                     <div class="item-imgWrap"><img src="${imgSrc}"/></div>
@@ -592,11 +599,13 @@ app.get('/item/:num', async (req, res) => {
         price: _item.price == 0 ? '무료' : toFormatMoney(_item.price) + '원',
         modify: modifyHTML,
         caller: isSeller ? '' : callerHTML,
-        callBtn: callBtn,
+        callBtn: isSeller ? callBtn : '',
         imgHTML: imgHTML,
         files: filesHTML,
         comment: await getCommentHTML(req, _item),
-        commentstate: req.session.isLogined ? '' : 'hidden'
+        commentstate: req.session.isLogined ? '' : 'hidden',
+        additon: req.query.past ? `${req.query.past}` : '',
+        searcher: req.query.searcher ? `${req.query.searcher}` : ''
     })
 })
 
@@ -678,6 +687,7 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
 
     var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName, is_buyed, is_hidden, is_file) '
     query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${filename}", 0, 0, 0);`
+    print(query)
     await sqlQuery(query)
     var lastIndex = await sqlQuery('select num from item order by num desc limit 1')
 
@@ -738,7 +748,13 @@ app.get('/profile', async (req, res) => {
     await sendRender(req, res, './views/profile.html', {
         nickname: result[0].nickname,
         uid: result[0].uid,
-        schoolid: result[0].schoolid
+        schoolid: result[0].schoolid,
+        manageHTML: isAdmin(req) ? `<a href="/manage">
+                        <div class="goto-btn-wrap">
+                            <div class="goto-button">관리자</div>
+                            <div class="btn-name center">관리하기</div>
+                        </div>
+                    </a>`: ''
     })
 })
 
@@ -771,9 +787,14 @@ app.get('/modify/:num', async (req, res) => {
             filesHTML += `<div id="file${i}" class="filebox"><p class="name">${toShort(files[i], 10)}</p></div>`
         }
     }
-    var hideBtn = isAdmin(req) ? `<a href="/hide/${req.params.num}">
-                                        <div class="confirmBtn center">가리기</div>
-                                    </a>` : ''
+    var hideBtn = isAdmin(req) ? `
+        <a href="/hide/${req.params.num}">
+            <div class="confirmBtn center">가리기</div>
+        </a>
+        <a href="/hide-cancel/${req.params.num}">
+            <div class="confirmBtn center">가리기 취소</div>
+        </a>
+        ` : ''
     await sendRender(req, res, './views/modify.html', {
         num: req.params.num,
         date: formatDatetime(new Date(_item.post_time)),
@@ -793,7 +814,7 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
-    if (!checkPost(req, res, `modify/${req.query.params}`, true)) {
+    if (!checkPost(req, res, `modify/${req.params.num}`, true)) {
         return
     }
     const body = req.body
@@ -806,7 +827,7 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     price = Number(price)
     var title = body.title.replaceAll('<', '< ')
     var content = body.content.replaceAll('<', '< ')
-    var caller = body.caller.replaceAll('<', '< ')
+    //var caller = body.caller.replaceAll('<', '< ')
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
     const _item = result[0]
     //오류 처리
@@ -821,7 +842,7 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     query += `content='${content}' , `
     query += `category='${body.category}' , `
     query += `price=${price}, `
-    query += `contact='${caller}' `
+    //query += `contact='${caller}' `
     query += !Boolean(filename) ? '' : `,imgName='${filename}' `
     query += `where num=${req.params.num}`
 
@@ -837,7 +858,7 @@ app.post('/modify-check2/:num', upload2.array('itemFile'), async (req, res) => {
     if (!isLogined(req, res)) {
         return
     }
-    if (!checkPost(req, res, `modify/${req.query.params}`, true)) {
+    if (!checkPost(req, res, `modify/${req.params.num}`, true)) {
         return
     }
     const body = req.body
@@ -850,7 +871,7 @@ app.post('/modify-check2/:num', upload2.array('itemFile'), async (req, res) => {
     price = Number(price)
     var title = body.title.replaceAll('<', '< ')
     var content = body.content.replaceAll('<', '< ')
-    var caller = body.caller.replaceAll('<', '< ')
+    //var caller = body.caller.replaceAll('<', '< ')
     const result = await sqlQuery(`select * from item where num=${req.params.num}`)
     const _item = result[0]
     //오류 처리
@@ -865,7 +886,7 @@ app.post('/modify-check2/:num', upload2.array('itemFile'), async (req, res) => {
     query += `content='${content}' , `
     query += `category='${body.category}' , `
     query += `price=${price}, `
-    query += `contact='${caller}' `
+    //query += `contact='${caller}' `
     query += _names.length == 0 ? '' : `,imgName='${_names_str}' `
     query += `where num=${req.params.num}`
     await sqlQuery(query)
@@ -902,7 +923,22 @@ app.get('/hide/:num', async (req, res) => {
     await sqlQuery(`update item set is_hidden=1 where num=${req.params.num}`)
     await sendAlert(req, `<span class="bold">${title}</span> 게시물을 가렸습니다.`, '')
     if (isAdmin(req)) {
-        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 삭제되었습니다.`, '', result[0].seller_num)
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 가려졌습니다.`, '', result[0].seller_num)
+    }
+    res.send(forcedMoveCode(`/search?category=${result[0].category}`))
+})
+
+app.get('/hide-cancel/:num', async (req, res) => {
+    if (await isWrongWithParam(req, res)) {
+        return
+    }
+    const result = await sqlQuery(`select * from item where num=${req.params.num}`)
+
+    var title = result[0].title
+    await sqlQuery(`update item set is_hidden=0 where num=${req.params.num}`)
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물에 가려짐을 취소하였습니다.`, '')
+    if (isAdmin(req)) {
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 가려짐이 취소되었습니다.`, '', result[0].seller_num)
     }
     res.send(forcedMoveCode(`/search?category=${result[0].category}`))
 })
@@ -948,15 +984,19 @@ app.get('/alert', async (req, res) => {
 })
 
 app.get('/change-pwd', async (req, res) => {
+    if (req.query.target && isAdmin(req)) {
+        await sendRender(req, res, './views/change_pwd.html', {
+            //비번 uid로 바꾸기
+            uid: req.session.uid == undefined ? '' : req.session.uid
+        })
+    }
     await sendRender(req, res, './views/change_pwd.html', {
         uid: req.session.uid == undefined ? '' : req.session.uid
     })
 })
 
 app.post('/change-pwd-check', async (req, res) => {
-    if (!isLogined(req, res)) {
-        return
-    }
+
     const body = req.body
     const result = await sqlQuery(`select * from user where num=${req.session.num} and upw='${body.oldpw}'`)
     try {
@@ -968,7 +1008,7 @@ app.post('/change-pwd-check', async (req, res) => {
         res.send(forcedMoveWithAlertCode("비밀번호가 옳바르지 않습니다.", "/change-pwd"))
         return
     }
-    if(body.newpw.length<4 || body.newpw.length>20){
+    if (body.newpw.length < 4 || body.newpw.length > 20) {
         res.send(forcedMoveWithAlertCode("비밀번호는 4~20자리여야 합니다", "/change-pwd"))
         return
     }
@@ -1100,6 +1140,7 @@ app.get('/manage/hiddencontent', async (req, res) => {
     `
     }
 
+
     var url = `/search?data=${_find}&category=${_cate}&page=`
     var backHTML = '<div class="pageBtn center dontgo">←</div>'
     var nextHTML = '<div class="pageBtn center dontgo">→</div>'
@@ -1116,6 +1157,25 @@ app.get('/manage/hiddencontent', async (req, res) => {
         gotoBack: backHTML,
         gotoNext: nextHTML,
         soldcontent: 'hiddencontent'
+    })
+})
+
+app.get('/manage/user', async (req, res) => {
+    if (!isAdmin(req)) {
+        res.send(forcedMoveWithAlertCode('권한이 적합하지 않습니다.', '/home'))
+        return
+    }
+    const result = await sqlQuery(`select * from user where uid='${req.query.uid}'`)
+    if (result.length == 0) {
+        await sendRender(req, res, './views/manage-user.html', {
+            nickname: "존재하지 않습니다",
+        })
+        return
+    }
+    await sendRender(req, res, './views/manage-user.html', {
+        nickname: result[0].nickname,
+        uid: result[0].uid,
+        schoolid: result[0].schoolid
     })
 })
 

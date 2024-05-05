@@ -116,10 +116,18 @@ label {
     visibility: hidden;
 }
 
+.buttons-wrap {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
 .confirmWrap {
-    padding: 30px;
+    padding: 10px 30px;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
     justify-content: space-around;
 }
 

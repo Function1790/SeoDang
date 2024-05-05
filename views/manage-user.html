@@ -13,6 +13,11 @@
     <div class="root">
         <div class="header">
             <div class="topbar-header">
+                <div class="gobackBtn">
+                    <a href="/manage">
+                        <img src="/img/buttonIcon/arrow.png" class="arrowBtn" alt="">
+                    </a>
+                </div>
                 <div>계정 정보</div>
             </div>
             <div class="topbar-container">
@@ -27,6 +32,16 @@
             </div>
         </div>
         <div class="container">
+            <form action="/manage/user" method="get" id="search">
+                <div>
+                    <div class="searcher">
+                        <input class="searchInput" type="text" name="uid" placeholder="아이디를 입력하세요.">
+                        <div class="searchGo center">
+                            <img class="nav-icon" id="searchGoBtn" src="/img/buttonIcon/search.png" />
+                        </div>
+                    </div>
+                </div>
+            </form>
             <div class="profile">
                 <div class="profile-data">
                     <div class="profile-img-wrap">
@@ -41,28 +56,19 @@
                 </div>
                 <div class="divid-bar"></div>
             </div>
-            <div class="display-button center">
-                <div class="buttons-wrap">
-                    <a href="/search?creator={{uid}}">
-                        <div class="goto-btn-wrap">
-                            <div class="goto-button"><img src="/img/buttonIcon/goto-mycontent.png" alt=""></div>
-                            <div class="btn-name center">내글</div>
-                        </div>
-                    </a>
-                    <a href="/logout">
-                        <div class="goto-btn-wrap">
-                            <div class="goto-button">로그아웃</div>
-                            <div class="btn-name center">로그아웃</div>
-                        </div>
-                    </a>
-                    <a href="/change-pwd">
-                        <div class="goto-btn-wrap">
-                            <div class="goto-button">비번변경</div>
-                            <div class="btn-name center">비번변경</div>
-                        </div>
-                    </a>
-                    {{manageHTML}}
-                </div>
+            <div class="buttons-wrap">
+                <a href="/search?creator={{uid}}">
+                    <div class="goto-btn-wrap">
+                        <div class="goto-button"><img src="/img/buttonIcon/goto-mycontent.png" alt=""></div>
+                        <div class="btn-name center">작성한 글</div>
+                    </div>
+                </a>
+                <a href="/change-pwd?target={{uid}}">
+                    <div class="goto-btn-wrap">
+                        <div class="goto-button">비번변경</div>
+                        <div class="btn-name center">비번변경</div>
+                    </div>
+                </a>
             </div>
         </div>
         <div class="footer">
@@ -83,7 +89,7 @@
             </div>
         </div>
     </div>
-    <script src="/src/search.js"></script>
+    <script src="/src/manage-profile.js"></script>
 </body>
 
 </html>
