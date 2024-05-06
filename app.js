@@ -399,6 +399,33 @@ async function isWrongWithParam(req, res) {
     return false
 }
 
+function toCommentHTML(req, comment, item, additon_class = '') {
+    var delete_btn = ''
+    if (comment.from_num === req.session.num || item.seller_num === req.session.num || isAdmin(req)) {
+        delete_btn = `
+        <a href="/delete-comment/${comment.num}">
+            <div class="comment-button comment-delete">
+                삭제
+            </div>
+        </a>`
+    }
+    return `
+    <div class="comment ${additon_class}">
+        <div class="comment-header">
+            <img class="comment-img" src="/img/icon/user.png">
+        </div>
+        <div class="comment-container">
+            <div class="comment-name">${comment.from_uid}</div>
+            <div class="comment-content">${comment.content}</div>
+            <div class="comment-button-wrap">
+                <div class="comment-button comment-reply">답하기</div>
+                ${delete_btn}
+            </div>
+            <div class="hidden comment-key">${comment.num}</div>
+        </div>
+    </div>`
+}
+
 async function getCommentHTML(req, item) {
     //(to_num, from_num, from_uid , reply_to, content, post_time)
     if (!req.session.isLogined) { return '' }
@@ -427,39 +454,28 @@ async function getCommentHTML(req, item) {
     var commentHTML = ''
     for (var i in commentsList) {
         var _comment = commentsList[i]
-        commentHTML += `
-        <div class="comment">
-            <div class="comment-header">
-                <img class="comment-img" src="/img/icon/user.png">
-            </div>
-            <div class="comment-container">
-                <div class="comment-name">${_comment.from_uid}</div>
-                <div class="comment-content">${_comment.content}</div>
-                <div class="comment-button-wrap">
-                    <div class="comment-button comment-reply">답하기</div>
-                </div>
-                <div class="hidden comment-key">${_comment.num}</div>
-            </div>
-        </div>`
+        commentHTML += toCommentHTML(req, _comment, item)
         for (var j in _comment.reply) {
             var _replyed = _comment.reply[j]
-            commentHTML += `
-                <div class="comment comment-replyed">
-                    <div class="comment-header">
-                        <img class="comment-img" src="/img/icon/user.png">
-                    </div>
-                    <div class="comment-container">
-                        <div class="comment-name">${_replyed.from_uid}</div>
-                        <div class="comment-content">${_replyed.content}</div>
-                        <div class="comment-button-wrap">
-                            <div class="comment-button comment-reply">답하기</div>
-                        </div>
-                        <div class="hidden comment-key">${_comment.num}</div>
-                    </div>
-                </div>`
+            commentHTML += toCommentHTML(req, _replyed, item, 'comment-replyed')
         }
     }
     return commentHTML
+}
+
+function preventSQLI(text) {
+    return connection.escape(text)
+}
+
+function isExistResult(sqlresult) {
+    try {
+        if (sqlresult.length == 0) {
+            return false
+        }
+        return true
+    } catch {
+        return false
+    }
 }
 
 //TP3
@@ -472,7 +488,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/home', async (req, res) => {
-    loginAdmin(req)
+    loginGuest(req)
     await sendRender(req, res, './views/home.html')
 })
 
@@ -554,12 +570,11 @@ app.get('/item/:num', async (req, res) => {
     //오류 처리
     const userResult = await sqlQuery(`select * from user where num=${_item.seller_num}`)
     const seller = userResult[0]
-    var callBtn = _item.is_buyed ? `<div class="callBtn soldout">거래완료</div>` : `<div class="callBtn">연락하기</div>`
+    var callBtn = _item.is_buyed ? `<div class="callBtn soldout">거래완료</div>` : ``
 
     const isSeller = req.session.num == _item.seller_num
     var modifyHTML = ''
     if (isSeller || isAdmin(req)) {
-
         callBtn = _item.is_buyed ? `
         <a class="callBtn soldout"><div >종료취소</div></a>
         ` : `<a class="callBtn" href="/soldout/${_item.num}"><div >거래종료</div></a>`
@@ -599,7 +614,7 @@ app.get('/item/:num', async (req, res) => {
         price: _item.price == 0 ? '무료' : toFormatMoney(_item.price) + '원',
         modify: modifyHTML,
         caller: isSeller ? '' : callerHTML,
-        callBtn: isSeller ? callBtn : '',
+        callBtn: callBtn,
         imgHTML: imgHTML,
         files: filesHTML,
         comment: await getCommentHTML(req, _item),
@@ -793,16 +808,14 @@ app.get('/modify/:num', async (req, res) => {
         </a>
         <a href="/hide-cancel/${req.params.num}">
             <div class="confirmBtn center">가리기 취소</div>
-        </a>
-        ` : ''
+        </a>` : ''
     await sendRender(req, res, './views/modify.html', {
         num: req.params.num,
         date: formatDatetime(new Date(_item.post_time)),
         title: _item.title,
         content: _item.content,
-        price: _item.price,
+        price: req.query.price ? req.query.price : _item.price,
         imgName: _item.imgName,
-        caller: _item.contact,
         category: getCategoryForm(_item.category),
         files: filesHTML,
         state: filestate,
@@ -841,7 +854,7 @@ app.post('/modify-check/:num', upload.single('itemImg'), async (req, res) => {
     query += `title='${title}' , `
     query += `content='${content}' , `
     query += `category='${body.category}' , `
-    query += `price=${price}, `
+    query += `price=${price} `
     //query += `contact='${caller}' `
     query += !Boolean(filename) ? '' : `,imgName='${filename}' `
     query += `where num=${req.params.num}`
@@ -885,7 +898,7 @@ app.post('/modify-check2/:num', upload2.array('itemFile'), async (req, res) => {
     query += `title='${title}' , `
     query += `content='${content}' , `
     query += `category='${body.category}' , `
-    query += `price=${price}, `
+    query += `price=${price} `
     //query += `contact='${caller}' `
     query += _names.length == 0 ? '' : `,imgName='${_names_str}' `
     query += `where num=${req.params.num}`
@@ -1204,6 +1217,38 @@ app.post('/comment-check/:num', upload2.array('itemFile'), async (req, res) => {
         }
     }
     res.send(forcedMoveCode(`/item/${req.params.num}`))
+})
+
+app.get('/delete-comment/:num', async (req, res) => {
+    //Exist
+    const result = await sqlQuery(`select * from comment where num=${preventSQLI(req.params.num)}`)
+    if (!isExistResult(result)) {
+        res.send(goBackWithAlertCode("해당 댓글은 존재하지 않습니다."))
+        return
+    }
+    const comment = result[0]
+    const resultPost = await sqlQuery(`select * from item where num=${comment.to_num}`)
+    if (!isExistResult(resultPost)) {
+        res.send(goBackWithAlertCode("해당 게시물은 존재하지 않습니다."))
+        return
+    }
+    //Access
+    const item = resultPost[0]
+    if (comment.from_num !== req.session.num && !isAdmin(req) && item.seller_num !== req.session.num) {
+        res.send(goBackWithAlertCode("해당 게시물에 대한 권한이 거부되었습니다."))
+        return
+    }
+    var deleter = ""
+    if (req.session.num == comment.from_num) {
+        deleter = "당신"
+    } else if(req.session.num == item.seller_num){
+        deleter = "게시자"
+    } else if(isAdmin(req)){
+        deleter = "관리자"
+    }
+    await sqlQuery(`delete from comment where num=${req.params.num}`)
+    await sendAlert(req, `<span class="bold">${item.title}</span> 게시물에서 당신의 댓글이 <span class="bold">${deleter}</span>에 의해 삭제되었습니다.`, `/item/${comment.to_num}`, comment.from_num)
+    res.send(goBackCode())
 })
 
 server.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))

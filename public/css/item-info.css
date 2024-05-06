@@ -17,15 +17,15 @@
     background-color: white;
     z-index: 1;
     margin-top: 100vh;
-    padding: 15px 0;
-    padding-bottom: 70px;
+    padding: 5px 0;
+    padding-bottom: 45px;
     display: flex;
     flex-direction: column;
 }
 
 .item-dataWrap {
     padding: 0 15px;
-    padding-top: 5px;
+    padding-top: 0px;
     padding-bottom: 40px;
     border-bottom: 1px solid #d8d8d8;
 }
@@ -57,7 +57,7 @@
 }
 
 .item-buttonWrap {
-    padding: 50px 0;
+    padding-top: 50px;
     margin-bottom: 25px;
     display: flex;
     align-items: end;
@@ -256,6 +256,8 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    flex: 1;
+    padding-right: 40px;
 }
 
 .comment-img {
@@ -266,6 +268,11 @@
     border-radius: 50%;
 }
 
+.comment-button-wrap {
+    display: flex;
+    flex-direction: row;
+}
+
 .comment-button {
     user-select: none;
     font-size: 12px;
@@ -274,7 +281,18 @@
     cursor: pointer;
 }
 
+.comment-delete {
+    margin-left: 10px;
+}
+
 .comment-replyed {
     margin-left: 0px;
     transform: scale(0.8);
+}
+
+.comment-manage-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
