@@ -178,7 +178,15 @@ async function renderFile(req, path, replaceItems = {}) {
     for (i in replaceItems) {
         content = content.replaceAll(`{{${i}}}`, replaceItems[i])
     }
-    return '<link rel="icon" href="/img/icon/logo.png"/>' + content
+
+    return `
+        <link rel="icon" href="/img/icon/logo.png"/>
+        <script>
+            function goBack(){
+                window.location.href = document.referrer
+            }
+        </script>
+    ` + content
 }
 
 /** res.send(renderFile(...)) */
@@ -488,7 +496,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/home', async (req, res) => {
-    loginGuest(req)
+    loginAdmin(req)
     await sendRender(req, res, './views/home.html')
 })
 
@@ -523,7 +531,7 @@ app.get('/search', async (req, res) => {
         var imgSrc = result[i].is_file ? '/img/icon/carrot.png' : `/img/item/${result[i].imgName}`
         itemsHTML += `
         <a href="/item/${result[i].num}?${past}${searcher}">
-            <div class="item">
+            <div class="item ${result[i].is_buyed ? 'soldout':''}">
                 <div class="item-header center">
                     <div class="item-imgWrap"><img src="${imgSrc}"/></div>
                 </div>
@@ -934,9 +942,9 @@ app.get('/hide/:num', async (req, res) => {
 
     var title = result[0].title
     await sqlQuery(`update item set is_hidden=1 where num=${req.params.num}`)
-    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 가렸습니다.`, '')
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 가렸습니다.`, `/item/${req.params.num}`)
     if (isAdmin(req)) {
-        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 가려졌습니다.`, '', result[0].seller_num)
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 가려졌습니다.`, `/item/${req.params.num}`, result[0].seller_num)
     }
     res.send(forcedMoveCode(`/search?category=${result[0].category}`))
 })
@@ -949,9 +957,9 @@ app.get('/hide-cancel/:num', async (req, res) => {
 
     var title = result[0].title
     await sqlQuery(`update item set is_hidden=0 where num=${req.params.num}`)
-    await sendAlert(req, `<span class="bold">${title}</span> 게시물에 가려짐을 취소하였습니다.`, '')
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물에 가려짐을 취소하였습니다.`, `/item/${req.params.num}`)
     if (isAdmin(req)) {
-        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 가려짐이 취소되었습니다.`, '', result[0].seller_num)
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 가려짐이 취소되었습니다.`, `/item/${req.params.num}`, result[0].seller_num)
     }
     res.send(forcedMoveCode(`/search?category=${result[0].category}`))
 })
@@ -964,9 +972,9 @@ app.get('/soldout/:num', async (req, res) => {
 
     var title = result[0].title
     await sqlQuery(`update item set is_buyed=1 where num=${req.params.num}`)
-    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 거래종료 하였습니다.`, '')
+    await sendAlert(req, `<span class="bold">${title}</span> 게시물을 거래종료 하였습니다.`, `/item/${req.params.num}`)
     if (isAdmin(req)) {
-        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 거래종료 되었습니다.`, '', result[0].seller_num)
+        await sendAlert(req, `<span class="bold">${title}</span> 게시물이 <span class="bold">관리자</span>에 의해 거래종료 되었습니다.`, `/item/${req.params.num}`, result[0].seller_num)
     }
     res.send(forcedMoveCode(`/item/${req.params.num}`))
 })
@@ -998,19 +1006,35 @@ app.get('/alert', async (req, res) => {
 
 app.get('/change-pwd', async (req, res) => {
     if (req.query.target && isAdmin(req)) {
+        const result = await sqlQuery(`select * from user where uid='${req.query.target}'`)
+        if (!isExistResult(result)) {
+            goBackWithAlertCode("해당 계정이 존재하지 않습니다.")
+            return
+        }
         await sendRender(req, res, './views/change_pwd.html', {
-            //비번 uid로 바꾸기
-            uid: req.session.uid == undefined ? '' : req.session.uid
+            uid: "ID : "+result[0].uid,
+            oldpw: "비번 : "+result[0].upw,
+            type:"text",
+            ruid: result[0].uid,
+            addtion:"disabled"
         })
+        return
     }
     await sendRender(req, res, './views/change_pwd.html', {
-        uid: req.session.uid == undefined ? '' : req.session.uid
+        uid: req.session.uid == undefined ? '로그인 정보가 없습니다' : req.session.uid,
+        oldpw: '',
+        type:"password"
     })
 })
 
 app.post('/change-pwd-check', async (req, res) => {
 
     const body = req.body
+    if(isAdmin(req)){
+        await sqlQuery(`update user set upw='${body.newpw}' where uid='${body.uid}'`)
+        res.send(forcedMoveWithAlertCode('비밀번호가 변경되었습니다.', `/manage/user?uid=${body.uid}`))
+        return
+    }
     const result = await sqlQuery(`select * from user where num=${req.session.num} and upw='${body.oldpw}'`)
     try {
         if (!result || !result.length || !body.oldpw || !body.newpw) {
@@ -1241,9 +1265,9 @@ app.get('/delete-comment/:num', async (req, res) => {
     var deleter = ""
     if (req.session.num == comment.from_num) {
         deleter = "당신"
-    } else if(req.session.num == item.seller_num){
+    } else if (req.session.num == item.seller_num) {
         deleter = "게시자"
-    } else if(isAdmin(req)){
+    } else if (isAdmin(req)) {
         deleter = "관리자"
     }
     await sqlQuery(`delete from comment where num=${req.params.num}`)

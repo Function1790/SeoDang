@@ -80,3 +80,7 @@
 .dontgo {
     color: #a0a0a0;
 }
+
+.soldout {
+    background-color: #f7f6f6;
+}
