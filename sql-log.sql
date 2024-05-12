@@ -59,3 +59,13 @@ create table comment(
 );
 insert into comment (to_num, from_num, from_uid , reply_to, content, post_time) value (1, 1, 'guest', null, '이건 테스트', '2024-04-08 8:19:00');
 
+create table report(
+    num int not null auto_increment,
+    target_num int not null,
+    kind text not null,
+    cause text not null,
+    content text not null,
+    post_time datetime not null,
+    link text not null,
+    primary key(num)
+);

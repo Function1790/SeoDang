@@ -130,6 +130,12 @@ const CategoryDetail = {
     ]
 }
 const COUNT_PER_PAGE = 20
+const reportCategoryPOST = [
+    "부적절한 사진",
+    "부적절한 제목/글",
+    "부적절한 댓글",
+    "거래 사기",
+]
 //TP2
 //<----------Function---------->
 const print = (data) => console.log(data)
@@ -496,7 +502,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/home', async (req, res) => {
-    loginAdmin(req)
+    loginGuest(req)
     await sendRender(req, res, './views/home.html')
 })
 
@@ -531,7 +537,7 @@ app.get('/search', async (req, res) => {
         var imgSrc = result[i].is_file ? '/img/icon/carrot.png' : `/img/item/${result[i].imgName}`
         itemsHTML += `
         <a href="/item/${result[i].num}?${past}${searcher}">
-            <div class="item ${result[i].is_buyed ? 'soldout':''}">
+            <div class="item ${result[i].is_buyed ? 'soldout' : ''}">
                 <div class="item-header center">
                     <div class="item-imgWrap"><img src="${imgSrc}"/></div>
                 </div>
@@ -590,6 +596,13 @@ app.get('/item/:num', async (req, res) => {
         <div class='wrapButton'>
             <a href="/modify/${_item.num}">
                 <div class="modify-button center">수정하기</div>
+            </a>
+        </div>`
+    } else {
+        modifyHTML = `
+            <div class='wrapButton'>
+            <a href="/report/post/${_item.num}">
+                <div class="modify-button center">신고하기</div>
             </a>
         </div>`
     }
@@ -1012,25 +1025,25 @@ app.get('/change-pwd', async (req, res) => {
             return
         }
         await sendRender(req, res, './views/change_pwd.html', {
-            uid: "ID : "+result[0].uid,
-            oldpw: "비번 : "+result[0].upw,
-            type:"text",
+            uid: "ID : " + result[0].uid,
+            oldpw: "비번 : " + result[0].upw,
+            type: "text",
             ruid: result[0].uid,
-            addtion:"disabled"
+            addtion: "disabled"
         })
         return
     }
     await sendRender(req, res, './views/change_pwd.html', {
         uid: req.session.uid == undefined ? '로그인 정보가 없습니다' : req.session.uid,
         oldpw: '',
-        type:"password"
+        type: "password"
     })
 })
 
 app.post('/change-pwd-check', async (req, res) => {
 
     const body = req.body
-    if(isAdmin(req)){
+    if (isAdmin(req)) {
         await sqlQuery(`update user set upw='${body.newpw}' where uid='${body.uid}'`)
         res.send(forcedMoveWithAlertCode('비밀번호가 변경되었습니다.', `/manage/user?uid=${body.uid}`))
         return
@@ -1273,6 +1286,49 @@ app.get('/delete-comment/:num', async (req, res) => {
     await sqlQuery(`delete from comment where num=${req.params.num}`)
     await sendAlert(req, `<span class="bold">${item.title}</span> 게시물에서 당신의 댓글이 <span class="bold">${deleter}</span>에 의해 삭제되었습니다.`, `/item/${comment.to_num}`, comment.from_num)
     res.send(goBackCode())
+})
+
+app.get('/report/post/:num', async (req, res) => {
+    if (!isLogined(req, res)) {
+        return
+    }
+    const _item = await sqlQuery(`select * from item where num=${req.params.num}`)
+    if (!isExistResult(_item)) {
+        res.send(goBackWithAlertCode('존재하지 않는 게시물입니다.'))
+        return
+    }
+    categoryHTML = ''
+    for (var i in reportCategoryPOST) {
+        categoryHTML += `<option value="${i}" selected>${reportCategoryPOST[i]}</option>`
+    }
+    sendRender(req, res, './views/report.html', {
+        postNum: req.params.num,
+        title: _item[0].title,
+        category: categoryHTML
+    })
+})
+
+app.post('/report-check/post/:num', upload2.array('itemFile'), async (req, res) => {
+    if (!isLogined(req, res)) {
+        return
+    }
+    const body = req.body
+    const _item = await sqlQuery(`select * from item where num=${req.params.num}`)
+    if (!isExistResult(_item)) {
+        res.send(goBackWithAlertCode('존재하지 않는 게시물입니다.'))
+        return
+    }
+    /*target_num int not null,
+    kind text not null,
+    cause text not null,
+    content text not null,
+    post_time datetime not null,
+    link text not null, */
+    const link = `/item/${req.params.num}`
+    const query = `insert into report (target_num, kind, post_time, link, cause, content) value (${req.params.num}, 'post', '${formatDatetimeInSQL(new Date())}', '${link}', '${body.cause}', '${body.content}');`
+    await sqlQuery(query)
+    res.send(forcedMoveCode(`/item/${req.params.num}`))
+    await sendAlert(req, `<span class="bold">${_item[0].title}</span>님의 게시물에 신고를 접수하였습니다.`, link, req.session.num)
 })
 
 server.listen(5500, () => console.log('Server run https://127.0.0.1:5500'))

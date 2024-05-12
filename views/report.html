@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서당</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/write.css">
+</head>
+
+<body>
+    <div class="root">
+        <div class="header">
+            <div class="topbar-header">
+                <div class="gobackBtn">
+                    <!--href="/search?creator={{additon}}&data={{searcher}}&category={{category_eng}}"-->
+                    <a onclick="goBack()">
+                        <img src="/img/buttonIcon/arrow.png" class="arrowBtn" alt="">
+                    </a>
+                </div>
+                <div>신고하기</div>
+            </div>
+            <div class="topbar-container">
+                <div class="topbar-logo"></div>
+            </div>
+            <div class="topbar-footer">
+                <a href="/alert">
+                    <div class="tool page-not-selected">
+                        <img class="nav-icon" src="/img/buttonIcon/{{alert_state}}.png" />
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="container">
+            <form action="/report-check/post/{{postNum}}" method="post" id="form" enctype="multipart/form-data">
+                <div class="inputWrap">
+                    <div class="inputLabel">게시물</div>
+                    <input class="input" id="title" type="text" name="title" placeholder="제목" value="{{title}}"
+                        disabled>
+                </div>
+                <div class="inputWrap">
+                    <div class="inputLabel">사유</div>
+                    <div class="input selectwrap">
+                        <select name="cause" id="select" class="select">
+                            <option disabled selected hidden required="required">과목 선택</option>
+                            {{category}}
+                        </select>
+                    </div>
+                </div>
+                <div class="inputWrap">
+                    <div class="inputLabel">설명</div>
+                    <textarea class="input input-long" id="content" type="text" name="content" value=""></textarea>
+                </div>
+                <div class="confirmWrap center">
+                    <input type="submit" class="confirmBtn center" value="신고하기">
+                </div>
+            </form>
+        </div>
+        <div class="footer">
+            <div class="nav-item page-not-selected">
+                <a href="/home">
+                    <img class="nav-icon" src="/img/buttonIcon/home2.png" />
+                </a>
+            </div>
+            <div class="nav-item page-selected">
+                <a href="/write">
+                    <img class="nav-icon" src="/img/buttonIcon/write.png" />
+                </a>
+            </div>
+            <div class="nav-item page-not-selected">
+                <a href="/profile">
+                    <img class="nav-icon" src="/img/buttonIcon/user.png" />
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
