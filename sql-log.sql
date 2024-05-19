@@ -11,6 +11,7 @@ insert into user (uid, upw, name, schoolid, nickname) values ("guest", "guest", 
 insert into user (uid, upw, name, schoolid, nickname) values ("sr1234", "sr1234", "홍길동", 230101, "서령고마법쟁이");
 insert into user (uid, upw, name, schoolid, nickname) values ("sr0000", "sr0000", "김철수", 230102, "영희 전남친");
 insert into user (uid, upw, name, schoolid, nickname) values ("admin", "admin", "관리자", 240000, "관리자");
+alter table user add temp_value int DEFAULT 0;
 
 create table item(
     num int not null auto_increment, 

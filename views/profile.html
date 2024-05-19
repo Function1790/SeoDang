@@ -38,7 +38,12 @@
                         <img class="profile-img" src="/img/icon/user.png" alt="">
                     </div>
                     <div class="profile-nickname">{{nickname}}</div>
-                    <input type="range" id="temp-value" min="0" max="100" value="36.5">
+                    <div class="temp-data-wrap">
+                        <div class="temp">
+                            <div class="temp-value" style="width:{{tempValue}}%"></div>
+                        </div>
+                        <div class="temp-data center">{{tempValue}}℃</div>
+                    </div>
                     <div class="profile-private-data">
                         <div class="text-data">이름 : {{uid}}</div>
                         <div class="text-data">학번 : {{schoolid}}</div>

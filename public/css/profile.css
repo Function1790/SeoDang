@@ -102,3 +102,21 @@
 #search {
     margin-bottom: 20px;
 }
+.temp {
+    margin-top: 20px;
+    width: 150px;
+    height: 10px;
+    background-color: #999;
+    border-radius: 50px;
+    overflow: hidden;
+}
+
+.temp-value {
+    height: 100%;
+    background-color: #ffba6c;
+}
+
+.temp-data {
+    font-size: 20px;
+    font-weight: 500;
+}

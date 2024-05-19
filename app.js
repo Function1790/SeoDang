@@ -492,6 +492,10 @@ function isExistResult(sqlresult) {
     }
 }
 
+function getTemp(tempValue) {
+    return 36.5 + tempValue / 10
+}
+
 //TP3
 //<----------Server---------->
 app.use(bodyParser.json())
@@ -778,6 +782,7 @@ app.get('/view-profile', async (req, res) => {
         schoolid: result[0].schoolid,
         isHidden: 'hidden',
         manageHTML: '',
+        tempValue: getTemp(result[0].temp_value)
     })
 })
 
@@ -793,6 +798,7 @@ app.get('/profile', async (req, res) => {
         uid: result[0].uid,
         schoolid: result[0].schoolid,
         isHidden: '',
+        tempValue: getTemp(result[0].temp_value),
         manageHTML: isAdmin(req) ? `<a href="/manage">
                         <div class="goto-btn-wrap">
                             <div class="goto-button">관리자</div>
