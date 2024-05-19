@@ -13,6 +13,11 @@
     <div class="root">
         <div class="header">
             <div class="topbar-header">
+                <div class="gobackBtn">
+                    <a onclick="goBack()">
+                        <img src="/img/buttonIcon/arrow.png" class="arrowBtn" alt="">
+                    </a>
+                </div>
                 <div>계정 정보</div>
             </div>
             <div class="topbar-container">
@@ -55,7 +60,7 @@
                             <div class="btn-name center">로그아웃</div>
                         </div>
                     </a>
-                    <a href="/change-pwd">
+                    <a href="/change-pwd" class=" {{isHidden}}">
                         <div class="goto-btn-wrap">
                             <div class="goto-button">비번변경</div>
                             <div class="btn-name center">비번변경</div>

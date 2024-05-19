@@ -296,3 +296,31 @@
     flex-direction: row;
     justify-content: space-between;
 }
+
+.seller-profile {
+    border-bottom: 1px solid #d8d8d8;
+    padding: 15px 20px;
+    height: 80px;
+    display: flex;
+}
+
+.profile-img-wrap {
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.profile-img-wrap > img{
+    height: 100%;
+}
+
+.profile-user-name {
+    margin-left: 10px;
+    font-size: 20px;
+}
+
+.profile-data{
+    display: flex;
+    align-items: center;
+    height: 100%;
+}

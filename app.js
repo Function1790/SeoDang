@@ -294,9 +294,9 @@ function checkPost(req, res, path = 'write', isNotImg = false) {
         res.send(forcedMoveWithAlertCode("가격은 음수가 아니여야합니다.", link))
         return false
     }
-    if (body.title.length < 5) {
+    if (body.title.length < 4) {
         const link = `/${path}?title=${title}&content=${content}&price=${price}&category=${category}`
-        res.send(forcedMoveWithAlertCode("제목의 길이는 5글자 이상이여야 합니다.", link))
+        res.send(forcedMoveWithAlertCode("제목의 길이는 4글자 이상이여야 합니다.", link))
         return false
     }
     if (price > 1000000) {
@@ -530,7 +530,8 @@ app.get('/search', async (req, res) => {
         if (_find) {
             var isInTitle = isExistKeyword(result[i].title, _find)
             var isInContent = isExistKeyword(result[i].content, _find)
-            if (!isInTitle && !isInContent) {
+            var isInNickname = isExistKeyword(result[i].seller_nickname, _find)
+            if (!isInTitle && !isInContent && !isInNickname) {
                 continue
             }
         }
@@ -543,7 +544,7 @@ app.get('/search', async (req, res) => {
                 </div>
                 <div class="item-container">
                     <div class="item-title">${result[i].title}</div>
-                    <div class="item-description">${result[i].seller}</div>
+                    <div class="item-description">${result[i].seller_nickname}</div>
                     <div class="item-price">${result[i].price == 0 ? '무료' : toFormatMoney(result[i].price) + '원'}</div>
                 </div>
             </div>
@@ -562,7 +563,7 @@ app.get('/search', async (req, res) => {
     }
     await sendRender(req, res, './views/search.html', {
         items: itemsHTML ? itemsHTML : "<div class='notFound'>게시물을 찾을 수 없습니다.</div>",
-        category: _find ? "검색" : (req.query.category == undefined ? '거래' : CategoryToKOR[req.query.category]),
+        category: _find ? `검색 : ${req.query.data}` : (req.query.category == undefined ? '거래' : CategoryToKOR[req.query.category]),
         pageNum: _page_index + 1,
         gotoBack: backHTML,
         gotoNext: nextHTML
@@ -641,7 +642,9 @@ app.get('/item/:num', async (req, res) => {
         comment: await getCommentHTML(req, _item),
         commentstate: req.session.isLogined ? '' : 'hidden',
         additon: req.query.past ? `${req.query.past}` : '',
-        searcher: req.query.searcher ? `${req.query.searcher}` : ''
+        searcher: req.query.searcher ? `${req.query.searcher}` : '',
+        sellerUid: seller.uid,
+        sellerNickname: seller.nickname,
     })
 })
 
@@ -721,8 +724,10 @@ app.post('/write-check', upload.single('itemImg'), async (req, res) => {
     var content = body.content.replaceAll('<', '< ')
     var caller = body.caller
 
-    var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName, is_buyed, is_hidden, is_file) '
-    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num}, "${filename}", 0, 0, 0);`
+    var query = 'insert into item (title, content, category, price, contact, post_time, isSelled, seller, seller_num, imgName, is_buyed, is_hidden, is_file, seller_nickname) '
+    query += `values ("${title}"," ${content}", "${body.category}", ${price}, "${caller}", 
+        "${formatDatetimeInSQL(new Date())}", 0, "${req.session.uid}", ${req.session.num},
+        "${filename}", 0, 0, 0, ${req.session.nickname});`
     print(query)
     await sqlQuery(query)
     var lastIndex = await sqlQuery('select num from item order by num desc limit 1')
@@ -770,7 +775,9 @@ app.get('/view-profile', async (req, res) => {
     await sendRender(req, res, './views/profile.html', {
         nickname: result[0].nickname,
         uid: result[0].uid,
-        schoolid: result[0].schoolid
+        schoolid: result[0].schoolid,
+        isHidden: 'hidden',
+        manageHTML: '',
     })
 })
 
@@ -785,6 +792,7 @@ app.get('/profile', async (req, res) => {
         nickname: result[0].nickname,
         uid: result[0].uid,
         schoolid: result[0].schoolid,
+        isHidden: '',
         manageHTML: isAdmin(req) ? `<a href="/manage">
                         <div class="goto-btn-wrap">
                             <div class="goto-button">관리자</div>
@@ -1299,7 +1307,7 @@ app.get('/report/post/:num', async (req, res) => {
     }
     categoryHTML = ''
     for (var i in reportCategoryPOST) {
-        categoryHTML += `<option value="${i}" selected>${reportCategoryPOST[i]}</option>`
+        categoryHTML += `<option value="${reportCategoryPOST[i]}" selected>${reportCategoryPOST[i]}</option>`
     }
     sendRender(req, res, './views/report.html', {
         postNum: req.params.num,

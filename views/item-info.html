@@ -14,7 +14,6 @@
         <div class="header">
             <div class="topbar-header">
                 <div class="gobackBtn">
-                    <!--href="/search?creator={{additon}}&data={{searcher}}&category={{category_eng}}"-->
                     <a onclick="goBack()">
                         <img src="/img/buttonIcon/arrow.png" class="arrowBtn" alt="">
                     </a>
@@ -51,12 +50,23 @@
                             <div class="item-price">{{price}}</div>
                         </div>
                     </div>
+                    <div class="seller-profile">
+                        <a href="/view-profile?uid={{sellerUid}}">
+                            <div class="profile-data">
+                                <div class="profile-img-wrap">
+                                    <img src="/img/icon/user2.png" alt="프로필">
+                                </div>
+                                <div class="profile-user-name">{{sellerNickname}}</div>
+                            </div>
+                        </a>
+                    </div>
                     <div class="commenter {{commentstate}}">
                         <form action="/comment-check/{{num}}" method="post" id="form" enctype="multipart/form-data">
                             <div class="inputLabel">댓글</div>
                             <div class="display-input-wrap">
                                 <div class="comment-input-wrap">
-                                    <textarea class="input input-long" id="content" type="text" name="content"></textarea>
+                                    <textarea class="input input-long" placeholder="당신이 쓴 댓글은 당신과 게시자에게만 보입니다."
+                                        id="content" type="text" name="content"></textarea>
                                 </div>
                                 <div class="submit-wrap">
                                     <div class="center reply-name"></div>

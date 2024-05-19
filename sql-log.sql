@@ -33,6 +33,11 @@ alter table item add file_type int;
 alter table item add is_hidden tinyint DEFAULT 0;
 alter table item add is_buyed tinyint DEFAULT 0;
 alter table item add is_file tinyint DEFAULT 0;
+alter table item add seller_nickname text;
+update item set seller_nickname='guest' where seller='guest';
+update item set seller_nickname='서령고마법쟁이' where seller='sr1234';
+update item set seller_nickname='영희 전남친' where seller='sr0000';
+update item set seller_nickname='관리자' where seller='admin';
 update item set seller_num=1, file_type=0, is_buyed=0, is_hidden=0;
 update item set is_buyed=0, is_hidden=0, is_file=0;
 
